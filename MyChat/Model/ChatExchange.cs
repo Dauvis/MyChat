@@ -91,10 +91,10 @@ namespace MyChat.Model
             {
                 var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
-                string promptPart = Markdown.ToHtml(HttpUtility.HtmlEncode(Prompt), pipeline);
+                string promptPart = Markdown.ToHtml(Prompt, pipeline);
                 string responsePart = Markdown.ToHtml(Response, pipeline);
 
-                return $"<div>\n{promptPart}\n</div>\n<hr/>\n{responsePart}\n<hr/>\n";
+                return $"<div class='user-msg-box'><p><b>User</b></p>{promptPart}</div><p><b>Assistant</b></p>{responsePart}";
             }
 
             return string.Empty;

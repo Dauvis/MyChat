@@ -1,5 +1,6 @@
 ﻿using MyChat.Data;
 using MyChat.Model;
+using MyChat.Util;
 using System.IO;
 
 namespace MyChat.Service
@@ -41,7 +42,7 @@ namespace MyChat.Service
 
             try
             {
-                string htmlDocument = $"<!DOCTYPE html><html><head></head><body>{document.CreateChatContentBuilder()}</body></html>";
+                string htmlDocument = string.Format(HTMLConstants.ExportDocumentTemplate, document.CreateChatContentBuilder());
                 await File.WriteAllTextAsync(filename, htmlDocument);
             }
             catch

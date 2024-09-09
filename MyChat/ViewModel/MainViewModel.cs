@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using MyChat.Model;
 using MyChat.Service;
 using MyChat.Util;
@@ -15,10 +16,11 @@ namespace MyChat.ViewModel
         private ChatDocument? _currentDocument;
         public ObservableCollection<ChatDocument> OpenDocuments { get; set; }
 
-        private string _prompt = string.Empty;
+        private Dictionary<Guid, string> _prompts = [];
         private IMainWindowBridgeUtil? _mainWindowBridgeUtil;
         private readonly IChatService _chatService;
         private readonly IDocumentService _documentService;
+        private readonly IDialogUtil _dialogUtil;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -33,21 +35,22 @@ namespace MyChat.ViewModel
         public ICommand UndoCommand { get; }
         public ICommand ExportAsHTMLCommand { get; }
 
-        public MainViewModel(IChatService chatService, IDocumentService documentService)
+        public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil)
         {
-            SendPromptCommand = new RelayCommand(SendPromptAsync);
-            NewDocumentCommand = new RelayCommand(NewDocumentAsync);
-            OpenDocumentCommand = new RelayCommand(OpenDocumentAsync);
-            CloseDocumentCommand = new RelayCommand(CloseDocument);
-            SaveDocumentCommand = new RelayCommand(SaveDocumentAsync);
-            SaveDocumentAsCommand = new RelayCommand(SaveDocumentAsAsync);
-            SaveAllDocumentCommand = new RelayCommand(SaveAllDocumentAsync);
-            UndoCommand = new RelayCommand(UndoAsync);
-            RedoCommand = new RelayCommand(RedoAsync);
-            ExportAsHTMLCommand = new RelayCommand(ExportAsHTMLAsync);
+            SendPromptCommand = new AsyncRelayCommand(SendPromptAsync);
+            NewDocumentCommand = new AsyncRelayCommand(NewDocumentAsync);
+            OpenDocumentCommand = new AsyncRelayCommand(OpenDocumentAsync);
+            CloseDocumentCommand = new AsyncRelayCommand<object>(CloseDocumentAsync);
+            SaveDocumentCommand = new AsyncRelayCommand(SaveDocumentAsync);
+            SaveDocumentAsCommand = new AsyncRelayCommand(SaveDocumentAsAsync);
+            SaveAllDocumentCommand = new AsyncRelayCommand(SaveAllDocumentAsync);
+            UndoCommand = new AsyncRelayCommand(UndoAsync);
+            RedoCommand = new AsyncRelayCommand(RedoAsync);
+            ExportAsHTMLCommand = new AsyncRelayCommand(ExportAsHTMLAsync);
 
             _chatService = chatService;
             _documentService = documentService;
+            _dialogUtil = dialogUtil;
             _documentService.OpenDocumentsChanged += DocumentService_OpenDocumentsChanged;
 
             OpenDocuments = [];
@@ -63,6 +66,7 @@ namespace MyChat.ViewModel
                 if (document is not null)
                 {
                     OpenDocuments.Add(document);
+                    _prompts[document.Identifier] = string.Empty;
                     SetFocusOnDocument(document);
                 }
             }
@@ -74,6 +78,7 @@ namespace MyChat.ViewModel
                 if (document is not null)
                 {
                     OpenDocuments.Remove(document);
+                    _prompts.Remove(document.Identifier);
                 }
 
                 if (OpenDocuments.Count == 0 || newSelection is null)
@@ -118,11 +123,23 @@ namespace MyChat.ViewModel
 
         public string Prompt
         {
-            get => _prompt;
+            get
+            {
+                if (_currentDocument is not null)
+                {
+                    return _prompts[_currentDocument.Identifier];
+                }
+
+                return string.Empty;
+            }
 
             set
             {
-                _prompt = value;
+                if (_currentDocument is not null)
+                {
+                    _prompts[_currentDocument.Identifier] = value;
+                }
+
                 OnPropertyChanged(nameof(Prompt));
             }
         }
@@ -198,11 +215,11 @@ namespace MyChat.ViewModel
 
             if (_currentDocument is not null)
             {
-                var errorMessage = await _chatService.SendPromptAsync(_currentDocument, _prompt);
+                var errorMessage = await _chatService.SendPromptAsync(_currentDocument, _prompts[_currentDocument.Identifier]);
 
                 if (errorMessage is not null)
                 {
-                    MessageBox.Show(errorMessage);
+                    _dialogUtil.ShowErrorMessage(errorMessage);
                 }
                 else
                 {
@@ -222,18 +239,35 @@ namespace MyChat.ViewModel
             OnPropertyChanged(string.Empty);
         }
 
-        private void CloseDocument(object parameter)
+        private async Task CloseDocumentAsync(object? parameter)
         {
             if (parameter is not null && _currentDocument is not null)
             {
                 ChatDocument document = (ChatDocument)parameter;
+
+                var result = _dialogUtil.AllowFileClosure(document);
+
+                if (result == UserDialogResult.Cancel)
+                {
+                    return;
+                }
+                else if (result == UserDialogResult.Yes)
+                {
+                    await PerformSaveDocumentAsync(document);
+
+                    if (document.IsDirty)
+                    {
+                        return; // assume that user clicked cancel on the save dialog
+                    }
+                }
+
                 _documentService.CloseDocument(document);
             }
         }
 
         public async Task OpenDocumentAsync()
         {
-            string documentPath = PromptForOpenDocumentPath();
+            string documentPath = _dialogUtil.PromptForOpenDocumentPath();
 
             if (string.IsNullOrEmpty(documentPath))
             {
@@ -257,7 +291,7 @@ namespace MyChat.ViewModel
             }
             else
             {
-                MessageBox.Show($"Failed to open chat file ({documentPath})");
+                _dialogUtil.FailedToSaveDocument(documentPath);
             }
         }
 
@@ -265,7 +299,7 @@ namespace MyChat.ViewModel
         {
             if (_currentDocument is not null)
             {
-                var documentPath = PromptForSaveDocumentPath(_currentDocument.DocumentPath);
+                var documentPath = _dialogUtil.PromptForSaveDocumentPath(_currentDocument.DocumentPath);
 
                 if (string.IsNullOrEmpty(documentPath))
                 {
@@ -276,7 +310,7 @@ namespace MyChat.ViewModel
 
                 if (!success)
                 {
-                    MessageBox.Show($"Failed to save chat file ({documentPath})");
+                    _dialogUtil.FailedToSaveDocument(documentPath);
                 }
 
                 OnPropertyChanged(nameof(WindowTitle));
@@ -287,7 +321,7 @@ namespace MyChat.ViewModel
         {
             if (_currentDocument is not null)
             {
-                await PerformSaveDocument(_currentDocument);
+                await PerformSaveDocumentAsync(_currentDocument);
 
                 OnPropertyChanged(nameof(WindowTitle));
             }
@@ -297,19 +331,19 @@ namespace MyChat.ViewModel
         {
             foreach (var document in OpenDocuments.Where(d => d.IsDirty == true))
             {
-                await PerformSaveDocument(document);
+                await PerformSaveDocumentAsync(document);
             }
 
             OnPropertyChanged(nameof(WindowTitle));
         }
 
-        private async Task PerformSaveDocument(ChatDocument document)
+        private async Task PerformSaveDocumentAsync(ChatDocument document)
         {
             string? documentPath = document.DocumentPath;
 
             if (string.IsNullOrEmpty(documentPath))
             {
-                documentPath = PromptForSaveDocumentPath(document.Filename);
+                documentPath = _dialogUtil.PromptForSaveDocumentPath(document.Filename);
             }
 
             if (string.IsNullOrEmpty(documentPath))
@@ -321,7 +355,7 @@ namespace MyChat.ViewModel
 
             if (!success)
             {
-                MessageBox.Show($"Failed to save chat file ({documentPath})");
+                _dialogUtil.FailedToSaveDocument(documentPath);
             }
         }
 
@@ -336,7 +370,7 @@ namespace MyChat.ViewModel
                     filename = Path.GetFileNameWithoutExtension(_currentDocument.DocumentPath);
                 }
 
-                var filepath = PromptForExportHTMLPath(filename);
+                var filepath = _dialogUtil.PromptForExportHTMLPath(filename);
 
                 if (string.IsNullOrEmpty(filepath))
                 {
@@ -347,7 +381,7 @@ namespace MyChat.ViewModel
 
                 if (exportResult == false)
                 {
-                    MessageBox.Show($"Failed to export HTML file ({filepath})");
+                    _dialogUtil.FailedToExportHTML(filepath);
                 }
             }
         }
@@ -378,64 +412,6 @@ namespace MyChat.ViewModel
                 await _mainWindowBridgeUtil!.AppendChatMessageAsync(_currentDocument.ChatContent);
                 OnPropertyChanged(nameof(WindowTitle));
             }
-        }
-
-
-        private static string PromptForExportHTMLPath(string curDocumentPath)
-        {
-            var dialog = new SaveFileDialog
-            {
-                FileName = curDocumentPath,
-                DefaultExt = ".html",
-                Filter = "HTML (.html)|*.html"
-            };
-
-            bool? result = dialog.ShowDialog();
-
-            if (result == false)
-            {
-                return string.Empty;
-            }
-
-            return dialog.FileName;
-        }
-
-        private static string PromptForSaveDocumentPath(string filename)
-        {
-            var dialog = new SaveFileDialog
-            {
-                FileName = filename,
-                DefaultExt = ".chat",
-                Filter = "Chat (.chat)|*.chat"
-            };
-
-            bool? result = dialog.ShowDialog();
-
-            if (result == false)
-            {
-                return string.Empty;
-            }
-
-            return dialog.FileName;
-        }
-
-        private static string PromptForOpenDocumentPath()
-        {
-            var dialog = new OpenFileDialog
-            {
-                FileName = "Chat",
-                DefaultExt = ".chat",
-                Filter = "Chat (.chat)|*.chat"
-            };
-
-            bool? result = dialog.ShowDialog();
-
-            if (result == false)
-            {
-                return string.Empty;
-            }
-
-            return dialog.FileName;
         }
 
         private void SetFocusOnDocument(ChatDocument document)

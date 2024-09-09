@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MyChat.Data;
 using MyChat.Service;
+using MyChat.Util;
 using MyChat.ViewModel;
 using System.Configuration;
 using System.Data;
@@ -29,6 +30,7 @@ namespace MyChat
             services.AddSingleton<IGPTService, GPTService>();
             services.AddSingleton<IChatService, ChatService>();
             services.AddSingleton<IDocumentService, DocumentService>();
+            services.AddSingleton<IDialogUtil, DialogUtil>();
             services.AddTransient<MainViewModel>();
         }
 

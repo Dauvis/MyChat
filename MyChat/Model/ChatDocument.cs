@@ -28,8 +28,18 @@ namespace MyChat.Model
         private string _defaultDocName;
         [JsonIgnore] 
         public Guid Identifier { get; } = Guid.NewGuid();
+        private bool _isDirty = false;
         [JsonIgnore] 
-        public bool IsDirty { get; set; } = false;
+        public bool IsDirty
+        {
+            get => _isDirty;
+
+            set
+            {
+                _isDirty = value;
+                OnPropertyChanged(nameof(FileTitle));
+            }
+        }
         [JsonIgnore]
         private string _documentPath = string.Empty;
         [JsonIgnore]
@@ -40,6 +50,7 @@ namespace MyChat.Model
             {
                 _documentPath = value;
                 OnPropertyChanged(nameof(Filename));
+                OnPropertyChanged(nameof(FileTitle));
             }
         }
         [JsonIgnore] 
@@ -59,6 +70,14 @@ namespace MyChat.Model
                 }
 
                 return Path.GetFileNameWithoutExtension(DocumentPath);
+            }
+        }
+        [JsonIgnore]
+        public string FileTitle
+        {
+            get
+            {
+                return $"{Filename}{(IsDirty ? "*" : "")}";
             }
         }
         [JsonIgnore]

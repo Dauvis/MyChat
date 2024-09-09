@@ -98,9 +98,10 @@ namespace MyChat.Service
                 document.Exchanges.RemoveLast();
                 document.UndoStack.Push(exchange);
                 undonePrompt = exchange.Prompt;
-                document.ChatContentBuilder = document.CreateChatContentBuilder();
+                document.ChatContentBuilder = document.CreateChatContentBuilder();                
                 document.TotalWeight -= exchange.Weight;
                 document.IsDirty = true;
+                ReloadChatMessages(document);
             }
 
             return undonePrompt;
@@ -118,6 +119,7 @@ namespace MyChat.Service
             document.TotalWeight += exchange.Weight;
             document.ChatContentBuilder = document.CreateChatContentBuilder();
             document.IsDirty = true;
+            ReloadChatMessages(document);
         }
 
         private static void PopulateMetadata(string documentPath, ChatDocument? document)
@@ -126,14 +128,19 @@ namespace MyChat.Service
             {
                 document.DocumentPath = documentPath;
                 document.ChatContentBuilder = document.CreateChatContentBuilder();
-                document.ChatMessages.Clear();
+                ReloadChatMessages(document);
+            }
+        }
 
-                foreach (var exchange in document.Exchanges)
+        private static void ReloadChatMessages(ChatDocument document)
+        {
+            document.ChatMessages.Clear();
+
+            foreach (var exchange in document.Exchanges)
+            {
+                foreach (var message in exchange.ChatMessages())
                 {
-                    foreach (var message in exchange.ChatMessages())
-                    {
-                        document.ChatMessages.Add(message);
-                    }
+                    document.ChatMessages.Add(message);
                 }
             }
         }

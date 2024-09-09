@@ -6,7 +6,7 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         xmlns:local="clr-namespace:MyChat"
         mc:Ignorable="d"
-        Title="{Binding WindowTitle}" Height="600" Width="800">
+        Title="{Binding WindowTitle}" Height="600" Width="800" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -116,7 +116,7 @@
                             <RowDefinition Height="auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Filename}" FontWeight="Bold" FontSize="12"/>
+                        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding FileTitle}" FontWeight="Bold" FontSize="12"/>
                         <Button Grid.Column="0" Grid.Row="0" Margin="0,0,3,0" Background="Transparent" BorderThickness="0" 
                                 Command="{Binding DataContext.CloseDocumentCommand, RelativeSource={RelativeSource AncestorType={x:Type ListView}}}" CommandParameter="{Binding}">
                             <Button.Content>
