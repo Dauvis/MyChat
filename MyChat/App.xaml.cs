@@ -26,12 +26,22 @@ namespace MyChat
         private static void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<MainWindow>();
-            services.AddSingleton<IChatDocumentRepository, ChatDocumentRepository>();
-            services.AddSingleton<IGPTService, GPTService>();
-            services.AddSingleton<IChatService, ChatService>();
-            services.AddSingleton<IDocumentService, DocumentService>();
-            services.AddSingleton<IDialogUtil, DialogUtil>();
+            services.AddTransient<SettingsWindow>();
+            services.AddTransient<NewChatWindow>();
+
+            services.AddTransient<IChatDocumentRepository, ChatDocumentRepository>();
+            services.AddTransient<IUserSettingsRepository, UserSettingsRepository>();
+
+            services.AddTransient<IGPTService, GPTService>();
+            services.AddTransient<IChatService, ChatService>();
+            services.AddTransient<IDocumentService, DocumentService>();
+            services.AddSingleton<ISettingsService, SettingsService>();
+
+            services.AddTransient<IDialogUtil, DialogUtil>();
+
             services.AddTransient<MainViewModel>();
+            services.AddTransient<SettingsViewModel>();
+            services.AddTransient<NewChatViewModel>();
         }
 
         protected override void OnStartup(StartupEventArgs e)

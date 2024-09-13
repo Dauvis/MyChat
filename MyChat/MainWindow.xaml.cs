@@ -1,5 +1,7 @@
-﻿using MyChat.Util;
+﻿using Microsoft.Extensions.DependencyInjection;
+using MyChat.Util;
 using MyChat.ViewModel;
+using System;
 using System.ComponentModel;
 using System.Windows;
 
@@ -12,16 +14,18 @@ namespace MyChat
     {
         private readonly MainViewModel _viewModel;
         private readonly IDialogUtil _dialogUtil;
+        private readonly IServiceProvider _services;
 
-        public MainWindow(MainViewModel viewModel, IDialogUtil dialogUtil)
+        public MainWindow(MainViewModel viewModel, IDialogUtil dialogUtil, IServiceProvider services)
         {
             InitializeComponent();
             _viewModel = viewModel;
             _dialogUtil = dialogUtil;
+            _services = services;
             var bridge = new MainWindowBridgeUtil(this, ChatViewer);
             _viewModel.SetMainWindowBridge(bridge);
             _ = bridge.InitializeAsync();
-            DataContext = viewModel;
+            DataContext = viewModel;            
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
@@ -38,6 +42,12 @@ namespace MyChat
             {
                 _viewModel.SaveAllDocumentCommand.Execute(null);
             }
+        }
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var settingsWindow = _services.GetRequiredService<SettingsWindow>();
+            settingsWindow.ShowDialog();
         }
     }
 }

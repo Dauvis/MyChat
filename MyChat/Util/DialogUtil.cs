@@ -1,5 +1,8 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
+using MyChat.DTO;
 using MyChat.Model;
+using MyChat.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,6 +22,13 @@ namespace MyChat.Util
 
     public class DialogUtil : IDialogUtil
     {
+        private readonly IServiceProvider _serviceProvider;
+
+        public DialogUtil(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+
         public UserDialogResult AllowApplicationClosure(ObservableCollection<ChatDocument> documents)
         {
             int dirtyDocs = documents.Where(d => d.IsDirty).Count();
@@ -106,6 +116,32 @@ namespace MyChat.Util
             }
 
             return dialog.FileName;
+        }
+
+        public NewChatDTO PromptForNewChat()
+        {
+            NewChatDTO dto = new();
+            var newChatWindow = _serviceProvider.GetRequiredService<NewChatWindow>();
+
+            if (newChatWindow == null)
+            {
+                return dto;
+            }
+
+            var dlgResult = newChatWindow.ShowDialog();
+
+            if (dlgResult == null || dlgResult == false)
+            {
+                return dto;
+            }
+            
+            NewChatViewModel dlgViewModel = (NewChatViewModel)newChatWindow.DataContext;
+
+            dto.IsOk = true;
+            dto.CustomInstructions = dlgViewModel.CustomInstructions;
+            dto.Tone = dlgViewModel.Tone;
+
+            return dto;
         }
 
         public void FailedToSaveDocument(string documentPath)

@@ -1,25 +1,50 @@
 ﻿using OpenAI.Chat;
 using OpenAI;
 using MyChat.Model;
+using System.Windows;
 
 namespace MyChat.Service
 {
     public class GPTService : IGPTService
     {
         private const string _keyVarName = "OPENAI_API_KEY";
-        private const string _chatClientModel = "gpt-4o-mini";
 
         private readonly string _openAIKey;
         private readonly OpenAIClient _client;
-        private readonly ChatClient _chatClient;
+        private ChatClient _chatClient;
 
-        public GPTService()
+        public const string DefaultChatModel = "gpt-4o-mini";
+        public string CurrentChatModel { get; private set; }
+        public List<string> AvailableModels { get; } = ["gpt-4o", "gpt-4o-mini"];
+
+        public GPTService(ISettingsService settingsService)
         {
             var key = Environment.GetEnvironmentVariable(_keyVarName) ?? throw new InvalidOperationException($"Environment variable {_keyVarName} has not been set");
 
             _openAIKey = key;
             _client = new OpenAIClient(_openAIKey);
-            _chatClient = _client.GetChatClient(_chatClientModel);
+
+            var userSettings = settingsService.GetUserSettings();
+
+            if (userSettings is not null && !string.IsNullOrEmpty(userSettings.SelectedChatModel))
+            {
+                CurrentChatModel = userSettings.SelectedChatModel;
+            }
+            else
+            {
+                CurrentChatModel = DefaultChatModel;
+            }
+
+            _chatClient = _client.GetChatClient(CurrentChatModel);
+        }
+
+        public void ChangeChatModel(string newModel)
+        {
+            if (newModel != CurrentChatModel)
+            {
+                CurrentChatModel = newModel;
+                _chatClient = _client.GetChatClient(CurrentChatModel);
+            }
         }
 
         public async Task<(ChatExchange, int)> SendMessageAsync(List<ChatMessage> chatMessages, string prompt)

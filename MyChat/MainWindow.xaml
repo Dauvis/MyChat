@@ -22,7 +22,7 @@
 
         <ToolBarTray Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
             <ToolBar Band="0" BandIndex="0">
-                <Button ToolTip="Create a new chat" Command="{Binding NewDocumentCommand}">
+                <Button ToolTip="Create a new chat" Command="{Binding NewDocumentCommand}" ToolBar.OverflowMode="Never">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/megaphone--plus.png" Margin="3"/>
@@ -30,7 +30,7 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
-                <Button ToolTip="Open previously saved chat" Command="{Binding OpenDocumentCommand}">
+                <Button ToolTip="Open previously saved chat" Command="{Binding OpenDocumentCommand}" ToolBar.OverflowMode="Never">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/book-open.png" Margin="3"/>
@@ -38,7 +38,7 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
-                <Button ToolTip="Save current chat" Command="{Binding SaveDocumentCommand}">
+                <Button ToolTip="Save current chat" Command="{Binding SaveDocumentCommand}" ToolBar.OverflowMode="Never">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/disk-black.png" Margin="3"/>
@@ -64,7 +64,7 @@
                 </Button>
             </ToolBar>
             <ToolBar Band="0" BandIndex="1">
-                <Button ToolTip="Undo" Command="{Binding UndoCommand}">
+                <Button ToolTip="Undo" Command="{Binding UndoCommand}" ToolBar.OverflowMode="Never">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/arrow-curve-180-left.png" Margin="3"/>
@@ -72,7 +72,7 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
-                <Button ToolTip="Redo" Command="{Binding RedoCommand}">
+                <Button ToolTip="Redo" Command="{Binding RedoCommand}" ToolBar.OverflowMode="Never">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/arrow-curve.png" Margin="3"/>
@@ -82,7 +82,7 @@
                 </Button>
             </ToolBar>
             <ToolBar Band="0" BandIndex="2">
-                <Button ToolTip="Export to html..." Command="{Binding ExportAsHTMLCommand}">
+                <Button ToolTip="Export to html..." Command="{Binding ExportAsHTMLCommand}" ToolBar.OverflowMode="AsNeeded">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/globe--arrow.png" Margin="3"/>
@@ -90,11 +90,19 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
-                <Button ToolTip="Image tool...">
+                <Button ToolTip="Image tool..." ToolBar.OverflowMode="AsNeeded">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/pencil-ruler.png" Margin="3"/>
                             <TextBlock Text="Image Tool" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+                <Button ToolTip="Settings..." ToolBar.OverflowMode="AsNeeded" Click="SettingsButton_Click">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/gear.png" Margin="3"/>
+                            <TextBlock Text="Settings" VerticalAlignment="Center" Margin="3,0,0,0"/>
                         </StackPanel>
                     </Button.Content>
                 </Button>
@@ -156,6 +164,6 @@
         <TextBox Grid.Column="2" Grid.Row="2" Margin="8,3,5,3" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" TextWrapping="WrapWithOverflow" 
                  Text="{Binding Prompt, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <Button Grid.Column="2" Grid.Row="3" Content="Send" HorizontalAlignment="Right" Margin="0,3,5,5" Command="{Binding SendPromptCommand}"/>
+        <Button Grid.Column="2" Grid.Row="3" Content="Send" HorizontalAlignment="Right" Margin="0,3,5,5" Command="{Binding SendPromptCommand}" Padding="5,1,5,1"/>
     </Grid>
 </Window>

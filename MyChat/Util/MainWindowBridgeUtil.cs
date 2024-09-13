@@ -20,18 +20,8 @@ namespace MyChat
 
         public async Task AppendChatMessageAsync(string htmlContent)
         {
-            // Ensure WebView2 is initialized
             await _chatWebView.EnsureCoreWebView2Async();
-
-            // Update the WebView2 with the new content
-            if (string.IsNullOrEmpty(htmlContent))
-            {
-                await _chatWebView.CoreWebView2.ExecuteScriptAsync($"document.body.innerHTML = `{HTMLConstants.StartChatMessage}`;");
-            }
-            else
-            {
-                await _chatWebView.CoreWebView2.ExecuteScriptAsync($"document.body.innerHTML = `{htmlContent}`;");
-            }
+            await _chatWebView.CoreWebView2.ExecuteScriptAsync($"document.body.innerHTML = `{htmlContent}`;");
         }
 
         public void SetCursorState(bool isWaiting)
@@ -43,21 +33,12 @@ namespace MyChat
         public async Task InitializeAsync()
         {
             await _chatWebView.EnsureCoreWebView2Async();
-            _chatWebView.NavigateToString(string.Format(HTMLConstants.DocumentTemplate, HTMLConstants.StartChatMessage));
         }
 
         public async Task SetChatMessagesAsync(string htmlContent)
         {
             await _chatWebView.EnsureCoreWebView2Async();
-
-            if (string.IsNullOrEmpty(htmlContent))
-            {
-                _chatWebView.NavigateToString(string.Format(HTMLConstants.DocumentTemplate, HTMLConstants.StartChatMessage));
-            }
-            else
-            {
-                _chatWebView.NavigateToString(string.Format(HTMLConstants.DocumentTemplate, htmlContent));
-            }
+            _chatWebView.NavigateToString(string.Format(HTMLConstants.DocumentTemplate, htmlContent));
         }
     }
 }

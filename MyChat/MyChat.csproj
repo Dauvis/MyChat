@@ -17,6 +17,7 @@
     <None Remove="Images\disk-black-arrow.png" />
     <None Remove="Images\disk-black.png" />
     <None Remove="Images\disks-black.png" />
+    <None Remove="Images\gear.png" />
     <None Remove="Images\globe--arrow.png" />
     <None Remove="Images\megaphone--plus.png" />
     <None Remove="Images\pencil-ruler.png" />
@@ -46,6 +47,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\disks-black.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\gear.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\globe--arrow.png">

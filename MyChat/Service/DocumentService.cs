@@ -18,12 +18,15 @@ namespace MyChat.Service
             _repository = repository;
         }
 
-        public ChatDocument CreateDocument(string additionalInstructions)
+        public ChatDocument CreateDocument(string tone, string additionalInstructions)
         {
-            string systemPrompt = SystemPrompts.DefaultSystemPrompt + " " + additionalInstructions;
+            string tonePrompt = string.IsNullOrEmpty(tone) ? SystemPrompts.SystemPromptMap[SystemPrompts.DefaultTone] : SystemPrompts.SystemPromptMap[tone];
+            string systemPrompt = tonePrompt + " " + additionalInstructions;
             ChatExchange systemExchange = new(systemPrompt, string.Empty, ExchangeType.System);
 
             ChatDocument document = _repository.CreateDocument();
+            document.Tone = string.IsNullOrEmpty(tone) ? SystemPrompts.DefaultTone : tone;
+            document.CustomInstructions = additionalInstructions;
             document.AddExchange(systemExchange);
             PopulateMetadata("", document);
             AddOpenDocument(document);

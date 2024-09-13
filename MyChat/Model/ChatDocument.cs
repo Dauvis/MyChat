@@ -1,4 +1,5 @@
-﻿using OpenAI.Chat;
+﻿using MyChat.Util;
+using OpenAI.Chat;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
@@ -19,6 +20,8 @@ namespace MyChat.Model
             }
         }
 
+        public string CustomInstructions { get; set; } = string.Empty;
+        public string Tone { get; set; } = string.Empty;
         public LinkedList<ChatExchange> Exchanges { get; set; } = [];
         public int TotalWeight { get; set; }
         public int TotalTokens { get; set; }
@@ -83,7 +86,7 @@ namespace MyChat.Model
         [JsonIgnore]
         public string ChatContent
         {
-            get => ChatContentBuilder.ToString();
+            get => Exchanges.Count > 1 ? ChatContentBuilder.ToString() : EmptyChatHTML();
         }
         #endregion
 
@@ -117,6 +120,8 @@ namespace MyChat.Model
         {
             StringBuilder content = new();
 
+            content.Append(DocumentHeaderHTML());
+
             foreach (var exchange in Exchanges)
             {
                 if (exchange.Type == ExchangeType.Chat)
@@ -126,6 +131,27 @@ namespace MyChat.Model
             }
 
             return content;
+        }
+
+        private string DocumentHeaderHTML()
+        {
+            StringBuilder builder = new();
+            builder.Append("<div style=\"border: 1px solid black; padding: 10px;\"><ul style=\"list-style-type: none; padding: 0; margin: 0;\">");
+            builder.Append($"<li><strong>Tone:</strong> {Tone}</li>");
+
+            if (!string.IsNullOrEmpty(CustomInstructions))
+            {
+                builder.Append($"<li><strong>Custom Instructions:</strong> {CustomInstructions}</li>");
+            }
+
+            builder.Append("</ul></div><br/>");
+
+            return builder.ToString();
+        }
+
+        private string EmptyChatHTML()
+        {
+            return $"{DocumentHeaderHTML()}{HTMLConstants.StartChatMessage}";
         }
     }
 }

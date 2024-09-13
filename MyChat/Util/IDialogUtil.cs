@@ -1,4 +1,5 @@
-﻿using MyChat.Model;
+﻿using MyChat.DTO;
+using MyChat.Model;
 using System.Collections.ObjectModel;
 
 namespace MyChat.Util
@@ -10,6 +11,7 @@ namespace MyChat.Util
         void FailedToExportHTML(string filepath);
         void FailedToSaveDocument(string documentPath);
         string PromptForExportHTMLPath(string curDocumentPath);
+        NewChatDTO PromptForNewChat();
         string PromptForOpenDocumentPath();
         string PromptForSaveDocumentPath(string filename);
         void ShowErrorMessage(string errorMessage);

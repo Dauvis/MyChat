@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using MyChat.Model;
 using MyChat.Service;
@@ -6,12 +7,13 @@ using MyChat.Util;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Reflection.Metadata;
 using System.Windows;
 using System.Windows.Input;
 
 namespace MyChat.ViewModel
 {
-    public class MainViewModel : INotifyPropertyChanged, IMainViewModel
+    public class MainViewModel : INotifyPropertyChanged
     {
         private ChatDocument? _currentDocument;
         public ObservableCollection<ChatDocument> OpenDocuments { get; set; }
@@ -21,6 +23,7 @@ namespace MyChat.ViewModel
         private readonly IChatService _chatService;
         private readonly IDocumentService _documentService;
         private readonly IDialogUtil _dialogUtil;
+        private readonly ISettingsService _settingsService;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -35,7 +38,7 @@ namespace MyChat.ViewModel
         public ICommand UndoCommand { get; }
         public ICommand ExportAsHTMLCommand { get; }
 
-        public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil)
+        public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil, ISettingsService settingsService)
         {
             SendPromptCommand = new AsyncRelayCommand(SendPromptAsync);
             NewDocumentCommand = new AsyncRelayCommand(NewDocumentAsync);
@@ -51,10 +54,13 @@ namespace MyChat.ViewModel
             _chatService = chatService;
             _documentService = documentService;
             _dialogUtil = dialogUtil;
+            _settingsService = settingsService;
             _documentService.OpenDocumentsChanged += DocumentService_OpenDocumentsChanged;
 
+            var userSettings = _settingsService.GetUserSettings();
+
             OpenDocuments = [];
-            _currentDocument = _documentService.CreateDocument("");
+            _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultCustomInstructions);
         }
 
         private void DocumentService_OpenDocumentsChanged(object? sender, OpenDocumentsChangedEventArgs e)
@@ -83,7 +89,8 @@ namespace MyChat.ViewModel
 
                 if (OpenDocuments.Count == 0 || newSelection is null)
                 {
-                    _currentDocument = _documentService.CreateDocument("");
+                    var userSettings = _settingsService.GetUserSettings();
+                    _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultCustomInstructions);
                 }
                 else
                 {
@@ -119,6 +126,11 @@ namespace MyChat.ViewModel
         public void SetMainWindowBridge(IMainWindowBridgeUtil mainWindowBridgeUtil)
         {
             _mainWindowBridgeUtil = mainWindowBridgeUtil;
+
+            if (_currentDocument is not null)
+            {
+                _ = _mainWindowBridgeUtil!.SetChatMessagesAsync(_currentDocument.ChatContent);
+            }
         }
 
         public string Prompt
@@ -234,7 +246,8 @@ namespace MyChat.ViewModel
 
         private async Task NewDocumentAsync()
         {
-            _currentDocument = _documentService.CreateDocument("");
+            var newChatDto = _dialogUtil.PromptForNewChat();
+            _currentDocument = _documentService.CreateDocument(newChatDto.Tone, newChatDto.CustomInstructions);
             await _mainWindowBridgeUtil!.InitializeAsync();
             OnPropertyChanged(string.Empty);
         }
