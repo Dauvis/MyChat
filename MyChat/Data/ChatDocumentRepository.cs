@@ -11,16 +11,19 @@ namespace MyChat.Data
 
         public ChatDocument CreateDocument()
         {
-            return new($"New Chat {_newDocumentCounter++}");
+            ChatDocument document =  new();
+            document.Metadata.DocumentFilename = $"New Chat {_newDocumentCounter++}";
+
+            return document;
         }
 
-        public async Task<ChatDocument?> OpenDocumentAsync(string documentPath)
+        public ChatDocument? OpenDocument(string documentPath)
         {
             ChatDocument? document;
 
             try
             {
-                string serialized = await File.ReadAllTextAsync(documentPath);
+                string serialized = File.ReadAllText(documentPath);
                 document = JsonSerializer.Deserialize<ChatDocument>(serialized);
             }
             catch
@@ -31,14 +34,14 @@ namespace MyChat.Data
             return document;
         }
 
-        public async Task<bool> SaveDocumentAsync(ChatDocument document, string documentPath)
+        public bool SaveDocument(ChatDocument document, string documentPath)
         {
             bool ok = true;
 
             try
             {
                 string serialized = JsonSerializer.Serialize(document);
-                await File.WriteAllTextAsync(documentPath, serialized);
+                File.WriteAllText(documentPath, serialized);
             }
             catch
             {

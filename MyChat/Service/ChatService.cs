@@ -25,7 +25,7 @@ namespace MyChat.Service
                     return null;
                 }
 
-                (var exchange, int tokens) = await _gptService.SendMessageAsync(document.ChatMessages, prompt);
+                (var exchange, int tokens) = await _gptService.SendMessageAsync(document.Metadata.ChatMessages, prompt);
                 _documentService.AddExchange(document, exchange, tokens);
             }
             catch (Exception ex)
@@ -42,7 +42,7 @@ namespace MyChat.Service
 
             try
             {
-                string htmlDocument = string.Format(HTMLConstants.ExportDocumentTemplate, document.CreateChatContentBuilder());
+                string htmlDocument = string.Format(HTMLConstants.ExportDocumentTemplate, document.CreateChatContentBuilder(true));
                 await File.WriteAllTextAsync(filename, htmlDocument);
             }
             catch

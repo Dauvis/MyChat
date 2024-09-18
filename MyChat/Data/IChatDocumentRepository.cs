@@ -6,7 +6,7 @@ namespace MyChat.Data
     {
         void CloseDocument(ChatDocument document);
         ChatDocument CreateDocument();
-        Task<ChatDocument?> OpenDocumentAsync(string documentPath);
-        Task<bool> SaveDocumentAsync(ChatDocument document, string documentPath);
+        ChatDocument? OpenDocument(string documentPath);
+        bool SaveDocument(ChatDocument document, string documentPath);
     }
 }

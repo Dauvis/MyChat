@@ -16,12 +16,13 @@ namespace MyChat.Service
         ChatDocument CreateDocument(string tone, string additionalInstructions);
         ChatDocument? FindDocument(Guid identifier);
         ChatDocument? FindDocument(string documentPath);
-        Task<ChatDocument?> OpenDocumentAsync(string documentPath);
-        Task<bool> SaveDocumentAsync(ChatDocument document, string documentPath);
+        ChatDocument? OpenDocument(string documentPath);
+        bool SaveDocument(ChatDocument document, string documentPath);
         void CloseDocument(ChatDocument document);
         void AddExchange(ChatDocument document, ChatExchange exchange, int tokens);
         string Undo(ChatDocument document);
         void Redo(ChatDocument document);
-
+        void UpdateUserSettings(UserSettings userSettings);
+        void OpenDocumentList(List<string> documentPaths);
     }
 }

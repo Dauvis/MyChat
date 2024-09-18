@@ -1,31 +1,26 @@
-﻿using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Win32;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using MyChat.Messages;
 using MyChat.Model;
 using MyChat.Service;
 using MyChat.Util;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;
-using System.Reflection.Metadata;
-using System.Windows;
 using System.Windows.Input;
 
 namespace MyChat.ViewModel
 {
-    public class MainViewModel : INotifyPropertyChanged
+    public class MainViewModel : ObservableObject
     {
         private ChatDocument? _currentDocument;
         public ObservableCollection<ChatDocument> OpenDocuments { get; set; }
 
-        private Dictionary<Guid, string> _prompts = [];
-        private IMainWindowBridgeUtil? _mainWindowBridgeUtil;
         private readonly IChatService _chatService;
         private readonly IDocumentService _documentService;
         private readonly IDialogUtil _dialogUtil;
         private readonly ISettingsService _settingsService;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        private string _prompt = string.Empty;
 
         public ICommand SendPromptCommand { get; }
         public ICommand NewDocumentCommand { get; }
@@ -41,14 +36,14 @@ namespace MyChat.ViewModel
         public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil, ISettingsService settingsService)
         {
             SendPromptCommand = new AsyncRelayCommand(SendPromptAsync);
-            NewDocumentCommand = new AsyncRelayCommand(NewDocumentAsync);
-            OpenDocumentCommand = new AsyncRelayCommand(OpenDocumentAsync);
-            CloseDocumentCommand = new AsyncRelayCommand<object>(CloseDocumentAsync);
-            SaveDocumentCommand = new AsyncRelayCommand(SaveDocumentAsync);
-            SaveDocumentAsCommand = new AsyncRelayCommand(SaveDocumentAsAsync);
-            SaveAllDocumentCommand = new AsyncRelayCommand(SaveAllDocumentAsync);
-            UndoCommand = new AsyncRelayCommand(UndoAsync);
-            RedoCommand = new AsyncRelayCommand(RedoAsync);
+            NewDocumentCommand = new RelayCommand(NewDocument);
+            OpenDocumentCommand = new RelayCommand(OpenDocument);
+            CloseDocumentCommand = new RelayCommand<object>(CloseDocument);
+            SaveDocumentCommand = new RelayCommand(SaveDocument);
+            SaveDocumentAsCommand = new RelayCommand(SaveDocumentAs);
+            SaveAllDocumentCommand = new RelayCommand(SaveAllDocument);
+            UndoCommand = new RelayCommand(Undo);
+            RedoCommand = new RelayCommand(Redo);
             ExportAsHTMLCommand = new AsyncRelayCommand(ExportAsHTMLAsync);
 
             _chatService = chatService;
@@ -57,10 +52,41 @@ namespace MyChat.ViewModel
             _settingsService = settingsService;
             _documentService.OpenDocumentsChanged += DocumentService_OpenDocumentsChanged;
 
-            var userSettings = _settingsService.GetUserSettings();
-
             OpenDocuments = [];
-            _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultCustomInstructions);
+            WeakReferenceMessenger.Default.Register<MainWindowStateMessage>(this, (r, m) => OnMainWindowState(m));
+        }
+
+        private void OnMainWindowState(MainWindowStateMessage message)
+        {
+            if (message.StateAction == MainWindowStateAction.Startup)
+            {
+                UserSettings userSettings = _settingsService.GetUserSettings();
+                _documentService.OpenDocumentList(userSettings.LastOpenFiles);
+
+                if (OpenDocuments.Count == 0)
+                {
+                    _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultCustomInstructions);
+                }
+                else
+                {
+                    _currentDocument = OpenDocuments.First();
+                }
+
+                SelectionChanged(_currentDocument, null);
+            }
+
+            if (message.StateAction == MainWindowStateAction.Shutdown)
+            {
+                WeakReferenceMessenger.Default.Unregister<MainWindowStateMessage>(this);
+                UserSettings userSettings = _settingsService.GetUserSettings();
+                _documentService.UpdateUserSettings(userSettings);
+                _settingsService.SetUserSettings(userSettings);
+            }
+
+            if (message.StateAction == MainWindowStateAction.Refresh)
+            {
+                OnPropertyChanged("");
+            }
         }
 
         private void DocumentService_OpenDocumentsChanged(object? sender, OpenDocumentsChangedEventArgs e)
@@ -72,25 +98,24 @@ namespace MyChat.ViewModel
                 if (document is not null)
                 {
                     OpenDocuments.Add(document);
-                    _prompts[document.Identifier] = string.Empty;
                     SetFocusOnDocument(document);
                 }
             }
             else if (e.Action == OpenDocumentsChangedAction.Removed)
             {
                 ChatDocument? newSelection = GetNewSelection(e.Identifier);
-                var document = OpenDocuments.Where(d => d.Identifier == e.Identifier).FirstOrDefault();
+                var document = OpenDocuments.Where(d => d.Metadata.Identifier == e.Identifier).FirstOrDefault();
 
                 if (document is not null)
                 {
                     OpenDocuments.Remove(document);
-                    _prompts.Remove(document.Identifier);
                 }
 
                 if (OpenDocuments.Count == 0 || newSelection is null)
                 {
                     var userSettings = _settingsService.GetUserSettings();
                     _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultCustomInstructions);
+                    SetFocusOnDocument(_currentDocument);
                 }
                 else
                 {
@@ -105,7 +130,7 @@ namespace MyChat.ViewModel
 
             foreach(var doc in OpenDocuments)
             {
-                if (doc.Identifier == identifier)
+                if (doc.Metadata.Identifier == identifier)
                 {
                     break;
                 }
@@ -123,36 +148,18 @@ namespace MyChat.ViewModel
             return document;
         }
 
-        public void SetMainWindowBridge(IMainWindowBridgeUtil mainWindowBridgeUtil)
-        {
-            _mainWindowBridgeUtil = mainWindowBridgeUtil;
-
-            if (_currentDocument is not null)
-            {
-                _ = _mainWindowBridgeUtil!.SetChatMessagesAsync(_currentDocument.ChatContent);
-            }
-        }
-
         public string Prompt
         {
-            get
-            {
-                if (_currentDocument is not null)
-                {
-                    return _prompts[_currentDocument.Identifier];
-                }
-
-                return string.Empty;
-            }
+            get => _prompt;
 
             set
             {
+                SetProperty(ref _prompt, value);
+
                 if (_currentDocument is not null)
                 {
-                    _prompts[_currentDocument.Identifier] = value;
+                    _currentDocument.Metadata.CurrentPrompt = value;
                 }
-
-                OnPropertyChanged(nameof(Prompt));
             }
         }
 
@@ -165,15 +172,15 @@ namespace MyChat.ViewModel
 
                 if (_currentDocument is not null)
                 {
-                    isDirty = _currentDocument.IsDirty;
+                    isDirty = _currentDocument.Metadata.IsDirty;
 
-                    if (!string.IsNullOrEmpty(_currentDocument.DocumentPath))
+                    if (!string.IsNullOrEmpty(_currentDocument.Metadata.DocumentPath))
                     {
-                        filename = _currentDocument.DocumentPath;
+                        filename = _currentDocument.Metadata.DocumentPath;
                     }
                     else
                     {
-                        filename = _currentDocument.Filename;
+                        filename = _currentDocument.Metadata.DocumentFilename;
                     }
                 }
 
@@ -206,28 +213,53 @@ namespace MyChat.ViewModel
         {
             get
             {
-                _currentDocument ??= OpenDocuments.First();
+                if (_currentDocument is null)
+                {
+                    if (OpenDocuments.Count > 0)
+                    {
+                        _currentDocument = OpenDocuments.First();
+                    }
+                    else
+                    {
+                        _currentDocument = new();
+                    }
+                }
 
                 return _currentDocument;
             }
 
             set
             {
-                if (_currentDocument is not null && value is not null && _currentDocument.Identifier != value.Identifier)
+                if (_currentDocument is not null && value is not null && _currentDocument.Metadata.Identifier != value.Metadata.Identifier)
                 {
+                    var previous = _currentDocument;
                     _currentDocument = value;
-                    _ = SelectionChangedAsync(_currentDocument);
+                    SelectionChanged(_currentDocument, previous);
                 }
             }
         }
 
+        public string CurrentChatModel
+        {
+            get
+            {
+                UserSettings settings = _settingsService.GetUserSettings();
+                return settings.SelectedChatModel;
+            }
+        }
+
+        public string CurrentTone
+        {
+            get => _currentDocument?.Tone ?? SystemPrompts.DefaultTone;
+        }
+
         private async Task SendPromptAsync()
         {
-            _mainWindowBridgeUtil!.SetCursorState(true);
+            WeakReferenceMessenger.Default.Send(new CursorStateChangeMessage(true));
 
             if (_currentDocument is not null)
             {
-                var errorMessage = await _chatService.SendPromptAsync(_currentDocument, _prompts[_currentDocument.Identifier]);
+                var errorMessage = await _chatService.SendPromptAsync(_currentDocument, _prompt);
 
                 if (errorMessage is not null)
                 {
@@ -235,24 +267,23 @@ namespace MyChat.ViewModel
                 }
                 else
                 {
-                    await _mainWindowBridgeUtil.AppendChatMessageAsync(_currentDocument.ChatContent);
+                    WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(_currentDocument.ChatContent));
                     OnPropertyChanged(nameof(WindowTitle));
                     Prompt = string.Empty;
                 }
             }
 
-            _mainWindowBridgeUtil.SetCursorState(false);
+            WeakReferenceMessenger.Default.Send(new CursorStateChangeMessage(false));
         }
 
-        private async Task NewDocumentAsync()
+        private void NewDocument()
         {
             var newChatDto = _dialogUtil.PromptForNewChat();
             _currentDocument = _documentService.CreateDocument(newChatDto.Tone, newChatDto.CustomInstructions);
-            await _mainWindowBridgeUtil!.InitializeAsync();
             OnPropertyChanged(string.Empty);
         }
 
-        private async Task CloseDocumentAsync(object? parameter)
+        private void CloseDocument(object? parameter)
         {
             if (parameter is not null && _currentDocument is not null)
             {
@@ -266,9 +297,9 @@ namespace MyChat.ViewModel
                 }
                 else if (result == UserDialogResult.Yes)
                 {
-                    await PerformSaveDocumentAsync(document);
+                    PerformSaveDocument(document);
 
-                    if (document.IsDirty)
+                    if (document.Metadata.IsDirty)
                     {
                         return; // assume that user clicked cancel on the save dialog
                     }
@@ -278,7 +309,7 @@ namespace MyChat.ViewModel
             }
         }
 
-        public async Task OpenDocumentAsync()
+        public void OpenDocument()
         {
             string documentPath = _dialogUtil.PromptForOpenDocumentPath();
 
@@ -295,7 +326,7 @@ namespace MyChat.ViewModel
                 return;
             }
 
-            var document = await _documentService.OpenDocumentAsync(documentPath);
+            var document = _documentService.OpenDocument(documentPath);
 
             if (document is not null)
             {
@@ -308,18 +339,18 @@ namespace MyChat.ViewModel
             }
         }
 
-        private async Task SaveDocumentAsAsync()
+        private void SaveDocumentAs()
         {
             if (_currentDocument is not null)
             {
-                var documentPath = _dialogUtil.PromptForSaveDocumentPath(_currentDocument.DocumentPath);
+                var documentPath = _dialogUtil.PromptForSaveDocumentPath(_currentDocument.DocumentFilename);
 
                 if (string.IsNullOrEmpty(documentPath))
                 {
                     return;
                 }
 
-                bool success = await _documentService.SaveDocumentAsync(_currentDocument, documentPath);
+                bool success = _documentService.SaveDocument(_currentDocument, documentPath);
 
                 if (!success)
                 {
@@ -330,33 +361,33 @@ namespace MyChat.ViewModel
             }
         }
 
-        private async Task SaveDocumentAsync()
+        private void SaveDocument()
         {
             if (_currentDocument is not null)
             {
-                await PerformSaveDocumentAsync(_currentDocument);
+                PerformSaveDocument(_currentDocument);
 
                 OnPropertyChanged(nameof(WindowTitle));
             }
         }
 
-        private async Task SaveAllDocumentAsync()
+        private void SaveAllDocument()
         {
-            foreach (var document in OpenDocuments.Where(d => d.IsDirty == true))
+            foreach (var document in OpenDocuments.Where(d => d.Metadata.IsDirty == true))
             {
-                await PerformSaveDocumentAsync(document);
+                PerformSaveDocument(document);
             }
 
             OnPropertyChanged(nameof(WindowTitle));
         }
 
-        private async Task PerformSaveDocumentAsync(ChatDocument document)
+        private void PerformSaveDocument(ChatDocument document)
         {
-            string? documentPath = document.DocumentPath;
+            string? documentPath = document.Metadata.DocumentPath;
 
             if (string.IsNullOrEmpty(documentPath))
             {
-                documentPath = _dialogUtil.PromptForSaveDocumentPath(document.Filename);
+                documentPath = _dialogUtil.PromptForSaveDocumentPath(document.Metadata.DocumentFilename);
             }
 
             if (string.IsNullOrEmpty(documentPath))
@@ -364,7 +395,7 @@ namespace MyChat.ViewModel
                 return;
             }
 
-            bool success = await _documentService.SaveDocumentAsync(document, documentPath);
+            bool success = _documentService.SaveDocument(document, documentPath);
 
             if (!success)
             {
@@ -378,9 +409,9 @@ namespace MyChat.ViewModel
             {
                 string filename = "Chat";
 
-                if (!string.IsNullOrEmpty(_currentDocument.DocumentPath))
+                if (!string.IsNullOrEmpty(_currentDocument.Metadata.DocumentPath))
                 {
-                    filename = Path.GetFileNameWithoutExtension(_currentDocument.DocumentPath);
+                    filename = _currentDocument.Metadata.DocumentFilename;
                 }
 
                 var filepath = _dialogUtil.PromptForExportHTMLPath(filename);
@@ -399,42 +430,45 @@ namespace MyChat.ViewModel
             }
         }
 
-        public async Task SelectionChangedAsync(ChatDocument document)
+        public void SelectionChanged(ChatDocument document, ChatDocument? previousDocument)
         {
-            await _mainWindowBridgeUtil!.SetChatMessagesAsync(document.ChatContent);
+            if (previousDocument is not null)
+            {
+                previousDocument.Metadata.CurrentPrompt = _prompt;
+            }
+
+            _prompt = document.Metadata.CurrentPrompt;
+            WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(document.ChatContent, true));            
             OnPropertyChanged(string.Empty);
         }
 
-        private async Task UndoAsync()
+        private void Undo()
         {
             if (_currentDocument is not null)
             {
                 string lastPrompt = _documentService.Undo(_currentDocument);
                 Prompt = lastPrompt;
-                await _mainWindowBridgeUtil!.AppendChatMessageAsync(_currentDocument.ChatContent);
+                WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(_currentDocument.ChatContent));
                 OnPropertyChanged(nameof(WindowTitle));
             }
         }
 
-        private async Task RedoAsync()
+        private void Redo()
         {
             if (_currentDocument is not null)
             {
                 _documentService.Redo(_currentDocument);
                 Prompt = string.Empty;
-                await _mainWindowBridgeUtil!.AppendChatMessageAsync(_currentDocument.ChatContent);
+                WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(_currentDocument.ChatContent));
                 OnPropertyChanged(nameof(WindowTitle));
             }
         }
 
         private void SetFocusOnDocument(ChatDocument document)
         {
-            CurrentDocument = document;
-        }
-
-        private void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            var previous = _currentDocument;
+            _currentDocument = document;
+            SelectionChanged(document, previous);
         }
     }
 }

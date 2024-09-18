@@ -1,6 +1,7 @@
 ﻿using MyChat.Data;
 using MyChat.Model;
 using MyChat.Util;
+using System.IO;
 
 namespace MyChat.Service
 {
@@ -36,24 +37,25 @@ namespace MyChat.Service
 
         public ChatDocument? FindDocument(Guid identifier)
         {
-            var document = _openDocuments.Where(d => d.Identifier == identifier).FirstOrDefault();
+            var document = _openDocuments.Where(d => d.Metadata.Identifier == identifier).FirstOrDefault();
 
             return document;
         }
 
         public ChatDocument? FindDocument(string documentPath)
         {
-            var document = _openDocuments.Where(d => d.DocumentPath == documentPath).FirstOrDefault();
+            var document = _openDocuments.Where(d => d.Metadata.DocumentPath == documentPath).FirstOrDefault();
 
             return document;
         }
 
-        public async Task<ChatDocument?> OpenDocumentAsync(string documentPath)
+        public ChatDocument? OpenDocument(string documentPath)
         {
-            var document = await _repository.OpenDocumentAsync(documentPath);
+            var document = _repository.OpenDocument(documentPath);
 
             if (document is not null)
             {
+                document.MarkAsDirty(false);
                 PopulateMetadata(documentPath, document);
                 AddOpenDocument(document);
             }
@@ -61,12 +63,13 @@ namespace MyChat.Service
             return document;
         }
 
-        public async Task<bool> SaveDocumentAsync(ChatDocument document, string documentPath)
+        public bool SaveDocument(ChatDocument document, string documentPath)
         {
-            bool result = await _repository.SaveDocumentAsync(document, documentPath);
+            bool result = _repository.SaveDocument(document, documentPath);
 
-            document.IsDirty = false;
-            document.DocumentPath = documentPath;
+            document.MarkAsDirty(false);
+            document.Metadata.DocumentPath = documentPath;
+            document.DocumentFilename = Path.GetFileNameWithoutExtension(documentPath);
 
             return result;
         }
@@ -80,9 +83,9 @@ namespace MyChat.Service
         public void AddExchange(ChatDocument document, ChatExchange exchange, int tokens)
         {
             document.AddExchange(exchange);
-            document.ChatContentBuilder.Append(exchange.Content());
+            document.Metadata.ChatContentBuilder.Append(exchange.Content());
+            document.MarkAsDirty(true);
             document.TotalTokens = tokens;
-            document.IsDirty = true;
         }
 
         public string Undo(ChatDocument document)
@@ -99,11 +102,11 @@ namespace MyChat.Service
             if (exchange.Type == ExchangeType.Chat)
             {
                 document.Exchanges.RemoveLast();
-                document.UndoStack.Push(exchange);
+                document.Metadata.UndoStack.Push(exchange);
                 undonePrompt = exchange.Prompt;
-                document.ChatContentBuilder = document.CreateChatContentBuilder();                
+                document.Metadata.ChatContentBuilder = document.CreateChatContentBuilder();                
                 document.TotalWeight -= exchange.Weight;
-                document.IsDirty = true;
+                document.MarkAsDirty(true);
                 ReloadChatMessages(document);
             }
 
@@ -112,16 +115,16 @@ namespace MyChat.Service
 
         public void Redo(ChatDocument document)
         {
-            if (document.UndoStack.Count < 1)
+            if (document.Metadata.UndoStack.Count < 1)
             {
                 return;
             }
 
-            ChatExchange exchange = document.UndoStack.Pop();
+            ChatExchange exchange = document.Metadata.UndoStack.Pop();
             document.Exchanges.AddLast(exchange);
             document.TotalWeight += exchange.Weight;
-            document.ChatContentBuilder = document.CreateChatContentBuilder();
-            document.IsDirty = true;
+            document.Metadata.ChatContentBuilder = document.CreateChatContentBuilder();
+            document.MarkAsDirty(true);
             ReloadChatMessages(document);
         }
 
@@ -129,35 +132,54 @@ namespace MyChat.Service
         {
             if (document is not null)
             {
-                document.DocumentPath = documentPath;
-                document.ChatContentBuilder = document.CreateChatContentBuilder();
+                document.Metadata.DocumentPath = documentPath;
+                document.Metadata.DocumentFilename = string.IsNullOrEmpty(documentPath) ? document.Metadata.DocumentFilename : Path.GetFileNameWithoutExtension(documentPath);
+                document.Metadata.ChatContentBuilder = document.CreateChatContentBuilder();
                 ReloadChatMessages(document);
             }
         }
 
         private static void ReloadChatMessages(ChatDocument document)
         {
-            document.ChatMessages.Clear();
+            document.Metadata.ChatMessages.Clear();
 
             foreach (var exchange in document.Exchanges)
             {
                 foreach (var message in exchange.ChatMessages())
                 {
-                    document.ChatMessages.Add(message);
+                    document.Metadata.ChatMessages.Add(message);
                 }
+            }
+        }
+
+        public void UpdateUserSettings(UserSettings userSettings)
+        {
+            userSettings.LastOpenFiles.Clear();
+
+            foreach (var document in _openDocuments.Where(d => !d.Metadata.IsDirty))
+            {
+                userSettings.LastOpenFiles.Add(document.Metadata.DocumentPath);
+            }
+        }
+
+        public void OpenDocumentList(List<string> documentPaths)
+        {
+            foreach (var documentPath in documentPaths)
+            {
+                OpenDocument(documentPath);
             }
         }
 
         private void AddOpenDocument(ChatDocument document)
         {
             _openDocuments.Add(document);
-            OnOpenDocumentsChanged(new(OpenDocumentsChangedAction.Added, document.Identifier));
+            OnOpenDocumentsChanged(new(OpenDocumentsChangedAction.Added, document.Metadata.Identifier));
         }
 
         private void RemoveOpenDocument(ChatDocument document)
         {
             _openDocuments.Remove(document);
-            OnOpenDocumentsChanged(new(OpenDocumentsChangedAction.Removed, document.Identifier));
+            OnOpenDocumentsChanged(new(OpenDocumentsChangedAction.Removed, document.Metadata.Identifier));
         }
 
         private void OnOpenDocumentsChanged(OpenDocumentsChangedEventArgs e)

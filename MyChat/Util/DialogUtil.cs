@@ -31,7 +31,7 @@ namespace MyChat.Util
 
         public UserDialogResult AllowApplicationClosure(ObservableCollection<ChatDocument> documents)
         {
-            int dirtyDocs = documents.Where(d => d.IsDirty).Count();
+            int dirtyDocs = documents.Where(d => d.Metadata.IsDirty).Count();
 
             if (dirtyDocs > 0)
             {
@@ -49,12 +49,12 @@ namespace MyChat.Util
             {
                 int chatExchanges = document.Exchanges.Where(e => e.Type == ExchangeType.Chat).Count();
 
-                if (!document.IsDirty || chatExchanges == 0)
+                if (!document.Metadata.IsDirty || chatExchanges == 0)
                 {
                     return UserDialogResult.No; // returning No as the file does not need to be saved
                 }
 
-                MessageBoxResult result = MessageBox.Show($"File {document.Filename} has been changed. Do you wish to save?", "MyChat", MessageBoxButton.YesNoCancel);
+                MessageBoxResult result = MessageBox.Show($"File {document.Metadata.DocumentFilename} has been changed. Do you wish to save?", "MyChat", MessageBoxButton.YesNoCancel);
                 return MsgBoxResultToDlgResult(result);
             }
 

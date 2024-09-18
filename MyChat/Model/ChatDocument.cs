@@ -1,23 +1,18 @@
-﻿using MyChat.Util;
-using OpenAI.Chat;
-using System.ComponentModel;
-using System.IO;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using MyChat.Util;
 using System.Text;
 using System.Text.Json.Serialization;
 
 namespace MyChat.Model
 {
-    public class ChatDocument : INotifyPropertyChanged
+    public class ChatDocument : ObservableObject
     {
         private string _documentName = string.Empty;
 
         public string DocumentName {
             get => _documentName;
-            set
-            {
-                _documentName = value;
-                OnPropertyChanged(nameof(DocumentName));
-            }
+
+            set => SetProperty(ref _documentName, value);
         }
 
         public string CustomInstructions { get; set; } = string.Empty;
@@ -26,101 +21,61 @@ namespace MyChat.Model
         public int TotalWeight { get; set; }
         public int TotalTokens { get; set; }
 
-        #region Metadata that will not be saved
         [JsonIgnore]
-        private string _defaultDocName;
-        [JsonIgnore] 
-        public Guid Identifier { get; } = Guid.NewGuid();
-        private bool _isDirty = false;
-        [JsonIgnore] 
-        public bool IsDirty
-        {
-            get => _isDirty;
-
-            set
-            {
-                _isDirty = value;
-                OnPropertyChanged(nameof(FileTitle));
-            }
-        }
-        [JsonIgnore]
-        private string _documentPath = string.Empty;
-        [JsonIgnore]
-        public string DocumentPath
-        {
-            get => _documentPath;
-            set
-            {
-                _documentPath = value;
-                OnPropertyChanged(nameof(Filename));
-                OnPropertyChanged(nameof(FileTitle));
-            }
-        }
-        [JsonIgnore] 
-        public StringBuilder ChatContentBuilder { get; set; } = new();
-        [JsonIgnore] 
-        public Stack<ChatExchange> UndoStack { get; } = [];
-        [JsonIgnore] 
-        public List<ChatMessage> ChatMessages { get; } = [];
-        [JsonIgnore]
-        public string Filename
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(DocumentPath))
-                {
-                    return _defaultDocName;
-                }
-
-                return Path.GetFileNameWithoutExtension(DocumentPath);
-            }
-        }
-        [JsonIgnore]
-        public string FileTitle
-        {
-            get
-            {
-                return $"{Filename}{(IsDirty ? "*" : "")}";
-            }
-        }
-        [JsonIgnore]
-        public string ChatContent
-        {
-            get => Exchanges.Count > 1 ? ChatContentBuilder.ToString() : EmptyChatHTML();
-        }
-        #endregion
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        private void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        public ChatDocumentMeta Metadata { get; } = new();
 
         [JsonConstructor]
         public ChatDocument()
         {
-            _defaultDocName = string.Empty;
         }
 
-        public ChatDocument(string defaultFilename)
+        [JsonIgnore]
+        public string ChatContent
         {
-            _defaultDocName = defaultFilename;
+            get => Exchanges.Count > 1 ? Metadata.ChatContentBuilder.ToString() : EmptyChatHTML();
+        }
+
+        [JsonIgnore]
+        public string DocumentFilename
+        {
+            get => Metadata.DocumentFilename;
+
+            set
+            {
+                Metadata.DocumentFilename = value;
+                OnPropertyChanged(nameof(DocumentFilename));
+                OnPropertyChanged(nameof(DocumentFilenameWithState));
+            }
+        }
+
+        public string DocumentFilenameWithState
+        {
+            get
+            {
+                string filename = DocumentFilename;
+                return $"{filename}{(Metadata.IsDirty ? " *" : "")}";
+            }
+        }
+
+        public void MarkAsDirty(bool isDirty)
+        {
+            Metadata.IsDirty = isDirty;
+            OnPropertyChanged(nameof(DocumentFilenameWithState));
         }
 
         public void AddExchange(ChatExchange exchange)
         {
             Exchanges.AddLast(exchange);
             TotalWeight += exchange.Weight;
-            IsDirty = true;
-            UndoStack.Clear();
+            MarkAsDirty(true);
+            Metadata.UndoStack.Clear();
         }
 
-        public StringBuilder CreateChatContentBuilder()
+        public StringBuilder CreateChatContentBuilder(bool isExport = false)
         {
             StringBuilder content = new();
 
-            content.Append(DocumentHeaderHTML());
+            content.Append(DocumentHeaderHTML(isExport));
 
             foreach (var exchange in Exchanges)
             {
@@ -133,18 +88,28 @@ namespace MyChat.Model
             return content;
         }
 
-        private string DocumentHeaderHTML()
+        private string DocumentHeaderHTML(bool isExport = false)
         {
+            bool addHeader = isExport || !string.IsNullOrEmpty(CustomInstructions);
+
             StringBuilder builder = new();
-            builder.Append("<div style=\"border: 1px solid black; padding: 10px;\"><ul style=\"list-style-type: none; padding: 0; margin: 0;\">");
-            builder.Append($"<li><strong>Tone:</strong> {Tone}</li>");
 
-            if (!string.IsNullOrEmpty(CustomInstructions))
+            if (addHeader)
             {
-                builder.Append($"<li><strong>Custom Instructions:</strong> {CustomInstructions}</li>");
-            }
+                builder.Append("<div style=\"border: 1px solid black; padding: 10px;\"><ul style=\"list-style-type: none; padding: 0; margin: 0;\">");
 
-            builder.Append("</ul></div><br/>");
+                if (isExport)
+                {
+                    builder.Append($"<li><strong>Tone:</strong> {Tone}</li>");
+                }                
+
+                if (!string.IsNullOrEmpty(CustomInstructions))
+                {
+                    builder.Append($"<li><strong>Custom Instructions:</strong> {CustomInstructions}</li>");
+                }
+
+                builder.Append("</ul></div><br/>");
+            }
 
             return builder.ToString();
         }
