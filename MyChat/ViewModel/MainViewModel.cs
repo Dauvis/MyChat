@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using MyChat.DTO;
 using MyChat.Messages;
 using MyChat.Model;
 using MyChat.Service;
@@ -19,7 +20,7 @@ namespace MyChat.ViewModel
         private readonly IDocumentService _documentService;
         private readonly IDialogUtil _dialogUtil;
         private readonly ISettingsService _settingsService;
-
+        private readonly IToolService _toolService;
         private string _prompt = string.Empty;
 
         public ICommand SendPromptCommand { get; }
@@ -33,7 +34,7 @@ namespace MyChat.ViewModel
         public ICommand UndoCommand { get; }
         public ICommand ExportAsHTMLCommand { get; }
 
-        public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil, ISettingsService settingsService)
+        public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil, ISettingsService settingsService, IToolService toolService)
         {
             SendPromptCommand = new AsyncRelayCommand(SendPromptAsync);
             NewDocumentCommand = new RelayCommand(NewDocument);
@@ -50,10 +51,45 @@ namespace MyChat.ViewModel
             _documentService = documentService;
             _dialogUtil = dialogUtil;
             _settingsService = settingsService;
+            _toolService = toolService;
+
             _documentService.OpenDocumentsChanged += DocumentService_OpenDocumentsChanged;
+            _toolService.ChatTitleEvent += ToolService_ChatTitleEvent;
+            _toolService.StartNewChatEvent += ToolService_StartNewChatEvent;
 
             OpenDocuments = [];
             WeakReferenceMessenger.Default.Register<MainWindowStateMessage>(this, (r, m) => OnMainWindowState(m));
+        }
+
+        private void ToolService_StartNewChatEvent(object? sender, NewChatEventArgs e)
+        {
+            if (_currentDocument is not null)
+            {
+                string tone = string.IsNullOrEmpty(e.Tone) ? _currentDocument.Tone : e.Tone;
+                string instructions = string.IsNullOrEmpty(e.Instructions) ? _currentDocument.CustomInstructions : e.Instructions;
+
+                _currentDocument = _documentService.CreateDocument(tone, instructions, e.Summary);
+                _currentDocument.DocumentName = e.Title;
+                _currentDocument.OriginalSummary = e.Summary;
+
+                OnPropertyChanged(string.Empty);
+            }
+        }
+
+        private void ToolService_ChatTitleEvent(object? sender, ChatTitleEventArgs e)
+        {
+            if (_currentDocument is not null)
+            {
+                if (e.Set)
+                {
+                    _currentDocument.DocumentName = e.Title;
+                    OnPropertyChanged(nameof(DocumentName));
+                }
+                else
+                {
+                    e.Title = _currentDocument.DocumentName;
+                }
+            }
         }
 
         private void OnMainWindowState(MainWindowStateMessage message)

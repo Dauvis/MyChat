@@ -17,6 +17,7 @@ namespace MyChat.Model
 
         public string CustomInstructions { get; set; } = string.Empty;
         public string Tone { get; set; } = string.Empty;
+        public string OriginalSummary { get; set; } = string.Empty;
         public LinkedList<ChatExchange> Exchanges { get; set; } = [];
         public int TotalWeight { get; set; }
         public int TotalTokens { get; set; }
@@ -48,6 +49,7 @@ namespace MyChat.Model
             }
         }
 
+        [JsonIgnore]
         public string DocumentFilenameWithState
         {
             get
@@ -90,7 +92,7 @@ namespace MyChat.Model
 
         private string DocumentHeaderHTML(bool isExport = false)
         {
-            bool addHeader = isExport || !string.IsNullOrEmpty(CustomInstructions);
+            bool addHeader = isExport || !string.IsNullOrEmpty(CustomInstructions) || !string.IsNullOrEmpty(OriginalSummary);
 
             StringBuilder builder = new();
 
@@ -106,6 +108,11 @@ namespace MyChat.Model
                 if (!string.IsNullOrEmpty(CustomInstructions))
                 {
                     builder.Append($"<li><strong>Custom Instructions:</strong> {CustomInstructions}</li>");
+                }
+
+                if (!string.IsNullOrEmpty(OriginalSummary))
+                {
+                    builder.Append($"<li><strong>Original Summary:</strong> {OriginalSummary}</li>");
                 }
 
                 builder.Append("</ul></div><br/>");

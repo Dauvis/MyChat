@@ -13,7 +13,7 @@ namespace MyChat.Service
         event EventHandler<OpenDocumentsChangedEventArgs>? OpenDocumentsChanged;
 
         IEnumerable<ChatDocument> OpenDocuments { get; }
-        ChatDocument CreateDocument(string tone, string additionalInstructions);
+        ChatDocument CreateDocument(string tone, string additionalInstructions, string originalSummary = "");
         ChatDocument? FindDocument(Guid identifier);
         ChatDocument? FindDocument(string documentPath);
         ChatDocument? OpenDocument(string documentPath);

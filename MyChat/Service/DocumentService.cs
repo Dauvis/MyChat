@@ -19,10 +19,11 @@ namespace MyChat.Service
             _repository = repository;
         }
 
-        public ChatDocument CreateDocument(string tone, string additionalInstructions)
+        public ChatDocument CreateDocument(string tone, string additionalInstructions, string originalSummary = "")
         {
             string tonePrompt = string.IsNullOrEmpty(tone) ? SystemPrompts.SystemPromptMap[SystemPrompts.DefaultTone] : SystemPrompts.SystemPromptMap[tone];
             string systemPrompt = tonePrompt + " " + additionalInstructions;
+            systemPrompt += string.IsNullOrEmpty(originalSummary) ? "" : $" This is a continuation of another chat with this summary: {originalSummary}";
             ChatExchange systemExchange = new(systemPrompt, string.Empty, ExchangeType.System);
 
             ChatDocument document = _repository.CreateDocument();

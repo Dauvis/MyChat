@@ -8,8 +8,7 @@ namespace MyChat.Model
     {
         System = 0,
         Chat = 1,
-        Summary = 2,
-        Tool = 3
+        Silent = 2
     }
 
     public class ChatExchange
@@ -53,7 +52,12 @@ namespace MyChat.Model
             }
         }
 
-        public string ToolCallId { get; set; } = string.Empty;
+        public bool HasToolCalls
+        {
+            get => ToolCalls.Count > 0;
+        }
+
+        public List<ExchangeToolCallCollection> ToolCalls { get; set; } = [];
 
         public ExchangeType Type { get; set; }
         public int Weight { get; set; }
@@ -108,20 +112,51 @@ namespace MyChat.Model
             }
             else if (Type == ExchangeType.Chat)
             {
-                return [new UserChatMessage(Prompt), new AssistantChatMessage(Response)];
+                if (HasToolCalls)
+                {
+                    List<ChatMessage> callMessages = [new UserChatMessage(Prompt)];
+                    callMessages = ToolCallMessages();
+                    callMessages.Add(new AssistantChatMessage(Response));
+
+                    return callMessages;
+                }
+                else
+                {
+                    return [new UserChatMessage(Prompt), new AssistantChatMessage(Response)];
+                }
             }
-            else if (Type == ExchangeType.Summary)
+            else if (Type == ExchangeType.Silent)
             {
-                return [new UserChatMessage(Prompt), new AssistantChatMessage(Response)];
-            }
-            else if (Type == ExchangeType.Tool)
-            {
-                return [new ToolChatMessage(ToolCallId, Response)];
+                List<ChatMessage> callMessages = [new UserChatMessage(Prompt)];
+                callMessages = ToolCallMessages();
+
+                return callMessages;
             }
             else
             {
                 return [];
             }
+        }
+
+        private List<ChatMessage> ToolCallMessages()
+        {
+            List<ChatMessage> messages = [];
+
+            foreach (var collection in ToolCalls)
+            {
+                var assistantMessage = new AssistantChatMessage(collection.AssistantMessage);
+                messages.Add(assistantMessage);
+
+                foreach (var toolCall in collection.ToolCalls)
+                {
+                    messages.Add(new ToolChatMessage(toolCall.ToolCallId, toolCall.CallResult));
+
+                    var call = ChatToolCall.CreateFunctionToolCall(toolCall.ToolCallId, toolCall.CallFunction, toolCall.CallArgs);
+                    assistantMessage.ToolCalls.Add(call);
+                }
+            }
+
+            return messages;
         }
     }
 }
