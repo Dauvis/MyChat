@@ -13,9 +13,9 @@ namespace MyChat.ViewModel
         private readonly ISettingsService _settings;
         private readonly IGPTService _gptService;
 
-        private string _defaultCustomInstructions = string.Empty;
-        private string _selectedModel = string.Empty;
-        private string _defaultTone = string.Empty;
+        private string _defaultCustomInstructions = "";
+        private string _selectedModel = "";
+        private string _defaultTone = "";
 
         public ICommand OkButtonClickedCommand { get; }
         public ICommand CancelButtonClickedCommand { get; }

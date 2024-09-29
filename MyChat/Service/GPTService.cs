@@ -3,17 +3,23 @@ using OpenAI;
 using MyChat.Model;
 using System.Windows;
 using System.Text.Json;
+using OpenAI.Images;
+using System.IO;
+using System.Linq.Expressions;
+using MyChat.Data;
 
 namespace MyChat.Service
 {
     public class GPTService : IGPTService
     {
         private const string _keyVarName = "OPENAI_API_KEY";
+        private const string _imageClientModel = "dall-e-3";
 
         private readonly string _openAIKey;
         private readonly OpenAIClient _client;
         private readonly IToolService _toolService;
         private ChatClient _chatClient;
+        private readonly ImageClient _imageClient;
 
         public const string DefaultChatModel = "gpt-4o-mini";
         public string CurrentChatModel { get; private set; }
@@ -38,6 +44,7 @@ namespace MyChat.Service
             }
 
             _chatClient = _client.GetChatClient(CurrentChatModel);
+            _imageClient = _client.GetImageClient(_imageClientModel);
             _toolService = toolService;
         }
 
@@ -56,7 +63,7 @@ namespace MyChat.Service
 
             ChatCompletionOptions options = new()
             {
-                Tools = { _toolService.GetChatTitleTool, _toolService.SetChatTitleTool, _toolService.StartNewChatTool }
+                Tools = { _toolService.GetChatTitleTool, _toolService.SetChatTitleTool, _toolService.StartNewChatTool, _toolService.SetImageGenerationPromptTool }
             };
 
             bool requiresAction;
@@ -114,5 +121,60 @@ namespace MyChat.Service
 
             return (exchange, totalTokens);
         }
+
+        public async Task<BinaryData?> GenerateImageAsync(string prompt, string quality, string size, string style)
+        {
+            try
+            {
+                ImageGenerationOptions options = new()
+                {
+                    Quality = QualityValue(quality),
+                    Size = SizeValue(size),
+                    Style = StyleValue(style),
+                    ResponseFormat = GeneratedImageFormat.Bytes
+                };
+
+                GeneratedImage image = await _imageClient.GenerateImageAsync(prompt, options);
+                BinaryData bytes = image.ImageBytes;
+
+                return bytes;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static GeneratedImageStyle StyleValue(string style)
+        {
+            return style switch
+            {
+                "Natural" => GeneratedImageStyle.Natural,
+                "Vivid" => GeneratedImageStyle.Vivid,
+                _ => GeneratedImageStyle.Natural,
+            };
+        }
+
+        private static GeneratedImageSize SizeValue(string size)
+        {
+            return size switch
+            {
+                "Standard" => GeneratedImageSize.W1024xH1024,
+                "Portrait" => GeneratedImageSize.W1024xH1792,
+                "Landscape" => GeneratedImageSize.W1792xH1024,
+                _ => GeneratedImageSize.W1024xH1024
+            };
+        }
+
+        private static GeneratedImageQuality QualityValue(string quality)
+        {
+            return quality switch
+            {
+                "Standard" => GeneratedImageQuality.Standard,
+                "High" => GeneratedImageQuality.High,
+                _ => GeneratedImageQuality.Standard
+            };
+        }
+
     }
 }

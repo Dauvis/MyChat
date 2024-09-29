@@ -12,7 +12,7 @@ namespace MyChat
         private const string userAppFolderName = "MyChat";
 #endif
 
-        private string _userSettingsPath = string.Empty;
+        private string _userSettingsPath = "";
 
         public UserSettings Fetch()
         {

@@ -7,7 +7,7 @@ namespace MyChat.Model
 {
     public class ChatDocument : ObservableObject
     {
-        private string _documentName = string.Empty;
+        private string _documentName = "";
 
         public string DocumentName {
             get => _documentName;
@@ -15,9 +15,9 @@ namespace MyChat.Model
             set => SetProperty(ref _documentName, value);
         }
 
-        public string CustomInstructions { get; set; } = string.Empty;
-        public string Tone { get; set; } = string.Empty;
-        public string OriginalSummary { get; set; } = string.Empty;
+        public string CustomInstructions { get; set; } = "";
+        public string Tone { get; set; } = "";
+        public string OriginalSummary { get; set; } = "";
         public LinkedList<ChatExchange> Exchanges { get; set; } = [];
         public int TotalWeight { get; set; }
         public int TotalTokens { get; set; }

@@ -74,7 +74,7 @@ namespace MyChat.Util
 
             if (result == false)
             {
-                return string.Empty;
+                return "";
             }
 
             return dialog.FileName;
@@ -93,7 +93,7 @@ namespace MyChat.Util
 
             if (result == false)
             {
-                return string.Empty;
+                return "";
             }
 
             return dialog.FileName;
@@ -112,7 +112,25 @@ namespace MyChat.Util
 
             if (result == false)
             {
-                return string.Empty;
+                return "";
+            }
+
+            return dialog.FileName;
+        }
+
+        public string PromptForSaveImagePath()
+        {
+            var dialog = new SaveFileDialog
+            {
+                DefaultExt = ".png",
+                Filter = "Portable Network Graphics (.png)|*.png"
+            };
+
+            bool? result = dialog.ShowDialog();
+
+            if (result == false)
+            {
+                return "";
             }
 
             return dialog.FileName;
@@ -159,7 +177,14 @@ namespace MyChat.Util
             MessageBox.Show(errorMessage);
         }
 
-        private UserDialogResult MsgBoxResultToDlgResult(MessageBoxResult msgBoxResult)
+        public bool PromptForConfirmation(string message)
+        {
+            var result = MessageBox.Show(message, "MyChat", MessageBoxButton.YesNo);
+
+            return result == MessageBoxResult.Yes;
+        }
+
+        private static UserDialogResult MsgBoxResultToDlgResult(MessageBoxResult msgBoxResult)
         {
             if (msgBoxResult == MessageBoxResult.Yes)
             {

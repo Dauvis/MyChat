@@ -21,7 +21,7 @@ namespace MyChat.ViewModel
         private readonly IDialogUtil _dialogUtil;
         private readonly ISettingsService _settingsService;
         private readonly IToolService _toolService;
-        private string _prompt = string.Empty;
+        private string _prompt = "";
 
         public ICommand SendPromptCommand { get; }
         public ICommand NewDocumentCommand { get; }
@@ -72,7 +72,7 @@ namespace MyChat.ViewModel
                 _currentDocument.DocumentName = e.Title;
                 _currentDocument.OriginalSummary = e.Summary;
 
-                OnPropertyChanged(string.Empty);
+                OnPropertyChanged("");
             }
         }
 
@@ -233,7 +233,7 @@ namespace MyChat.ViewModel
                     return _currentDocument.DocumentName;
                 }
 
-                return string.Empty;
+                return "";
             }
 
             set
@@ -305,7 +305,7 @@ namespace MyChat.ViewModel
                 {
                     WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(_currentDocument.ChatContent));
                     OnPropertyChanged(nameof(WindowTitle));
-                    Prompt = string.Empty;
+                    Prompt = "";
                 }
             }
 
@@ -316,7 +316,7 @@ namespace MyChat.ViewModel
         {
             var newChatDto = _dialogUtil.PromptForNewChat();
             _currentDocument = _documentService.CreateDocument(newChatDto.Tone, newChatDto.CustomInstructions);
-            OnPropertyChanged(string.Empty);
+            OnPropertyChanged("");
         }
 
         private void CloseDocument(object? parameter)
@@ -367,7 +367,7 @@ namespace MyChat.ViewModel
             if (document is not null)
             {
                 SetFocusOnDocument(document);
-                OnPropertyChanged(string.Empty);
+                OnPropertyChanged("");
             }
             else
             {
@@ -475,7 +475,7 @@ namespace MyChat.ViewModel
 
             _prompt = document.Metadata.CurrentPrompt;
             WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(document.ChatContent, true));            
-            OnPropertyChanged(string.Empty);
+            OnPropertyChanged("");
         }
 
         private void Undo()
@@ -494,7 +494,7 @@ namespace MyChat.ViewModel
             if (_currentDocument is not null)
             {
                 _documentService.Redo(_currentDocument);
-                Prompt = string.Empty;
+                Prompt = "";
                 WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(_currentDocument.ChatContent));
                 OnPropertyChanged(nameof(WindowTitle));
             }

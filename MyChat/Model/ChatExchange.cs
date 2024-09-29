@@ -101,7 +101,7 @@ namespace MyChat.Model
                 return $"<div class='user-msg-box'>{promptPart}</div>{responsePart}";
             }
 
-            return string.Empty;
+            return "";
         }
 
         public List<ChatMessage> ChatMessages()

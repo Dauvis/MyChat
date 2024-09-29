@@ -53,21 +53,25 @@ namespace MyChat
             services.AddSingleton<MainWindow>();
             services.AddTransient<SettingsWindow>();
             services.AddTransient<NewChatWindow>();
+            services.AddTransient<ImageToolWindow>();
 
             services.AddTransient<IChatDocumentRepository, ChatDocumentRepository>();
             services.AddTransient<IUserSettingsRepository, UserSettingsRepository>();
+            services.AddTransient<IImageInformationRepository, ImageInformationRepository>();
 
             services.AddTransient<IGPTService, GPTService>();
             services.AddTransient<IChatService, ChatService>();
             services.AddSingleton<IDocumentService, DocumentService>();
             services.AddSingleton<ISettingsService, SettingsService>();
             services.AddSingleton<IToolService, ToolService>();
+            services.AddTransient<IImageService, ImageService>();
 
             services.AddTransient<IDialogUtil, DialogUtil>();
 
             services.AddTransient<MainViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<NewChatViewModel>();
+            services.AddTransient<ImageToolViewModel>();
         }
 
         protected override void OnStartup(StartupEventArgs e)

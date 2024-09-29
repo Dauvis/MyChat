@@ -22,15 +22,19 @@ namespace MyChat
         private readonly IDialogUtil _dialogUtil;
         private readonly IServiceProvider _services;
         private readonly ISettingsService _settingsService;
+        private readonly IToolService _toolService;
 
-        public MainWindow(MainViewModel viewModel, IDialogUtil dialogUtil, IServiceProvider services, ISettingsService settingsService)
+        public MainWindow(MainViewModel viewModel, IDialogUtil dialogUtil, IServiceProvider services, ISettingsService settingsService, IToolService toolService)
         {
-            InitializeComponent();
             _viewModel = viewModel;
+            DataContext = viewModel;
+
+            InitializeComponent();
+
             _dialogUtil = dialogUtil;
             _services = services;
             _settingsService = settingsService;
-            DataContext = viewModel;
+            _toolService = toolService;
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
@@ -54,13 +58,15 @@ namespace MyChat
 
             settings.MainWindow.Rectangle = new Rect(Left, Top, Width, Height);
             settings.MainWindow.ChatColumnWidth = columns[0].Width.Value;
-            settings.MainWindow.MessageColumnWidth = columns[2].Width.Value;
+            settings.MainWindow.MessageColumnWidth = columns[4].Width.Value;
 
             _settingsService.SetUserSettings(settings);
 
             WeakReferenceMessenger.Default.Unregister<ChatViewUpdatedMessage>(this);
             WeakReferenceMessenger.Default.Unregister<CursorStateChangeMessage>(this);
             WeakReferenceMessenger.Default.Send(new MainWindowStateMessage(MainWindowStateAction.Shutdown));
+
+            Application.Current.Shutdown();
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
@@ -103,12 +109,29 @@ namespace MyChat
                 Width = settings.MainWindow.Rectangle.Width;
                 Height = settings.MainWindow.Rectangle.Height;
                 columns[0].Width = new(settings.MainWindow.ChatColumnWidth);
-                columns[2].Width = new(settings.MainWindow.MessageColumnWidth);
+                columns[4].Width = new(settings.MainWindow.MessageColumnWidth);
             }
 
             WeakReferenceMessenger.Default.Register<ChatViewUpdatedMessage>(this, async (r, m) => await OnChatViewUpdatedAsync(m));
             WeakReferenceMessenger.Default.Register<CursorStateChangeMessage>(this, (r, m) => OnCursorStateChanged(m));
             WeakReferenceMessenger.Default.Send(new MainWindowStateMessage(MainWindowStateAction.Startup));
+            _toolService.SubscribeToOpenImageTool(ToolService_OpenImageTool);
+        }
+
+        private void ToolService_OpenImageTool(object? sender, OpenImageToolEventArgs e)
+        {
+            OpenImageTool();
+        }
+
+        private void ImageTool_Click(object sender, RoutedEventArgs e)
+        {
+            OpenImageTool();
+        }
+
+        private void OpenImageTool()
+        {
+            var imageToolWindow = _services.GetRequiredService<ImageToolWindow>();
+            imageToolWindow.Show();
         }
     }
 }

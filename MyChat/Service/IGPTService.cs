@@ -9,6 +9,7 @@ namespace MyChat.Service
         List<string> AvailableModels { get; }
 
         void ChangeChatModel(string newModel);
+        Task<BinaryData?> GenerateImageAsync(string prompt, string quality, string size, string style);
         Task<(ChatExchange, int)> SendMessageAsync(List<ChatMessage> chatMessages, string prompt);
     }
 }

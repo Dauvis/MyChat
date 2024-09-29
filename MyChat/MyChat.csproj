@@ -11,26 +11,60 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Images\arrow-180.png" />
     <None Remove="Images\arrow-curve-180-left.png" />
     <None Remove="Images\arrow-curve.png" />
+    <None Remove="Images\arrow-repeat.png" />
+    <None Remove="Images\arrow-skip-180.png" />
+    <None Remove="Images\arrow-skip.png" />
+    <None Remove="Images\arrow-stop-180.png" />
+    <None Remove="Images\arrow-stop.png" />
+    <None Remove="Images\arrow.png" />
     <None Remove="Images\book-open.png" />
     <None Remove="Images\cross-small-white.png" />
     <None Remove="Images\cross-white.png" />
+    <None Remove="Images\cross.png" />
     <None Remove="Images\disk-black-arrow.png" />
     <None Remove="Images\disk-black.png" />
     <None Remove="Images\disks-black.png" />
     <None Remove="Images\gear.png" />
     <None Remove="Images\globe--arrow.png" />
+    <None Remove="Images\image--arrow.png" />
+    <None Remove="Images\information.png" />
+    <None Remove="Images\map--pencil.png" />
     <None Remove="Images\megaphone--plus.png" />
     <None Remove="Images\pencil-ruler.png" />
+    <None Remove="Images\pencil.png" />
+    <None Remove="Images\placeholder.png" />
     <None Remove="Images\textboxbackground.gif" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Images\arrow-180.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Images\arrow-curve-180-left.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\arrow-curve.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\arrow-repeat.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\arrow-skip-180.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\arrow-skip.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\arrow-stop-180.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\arrow-stop.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\arrow.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\book-open.png">
@@ -40,6 +74,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\cross-white.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\cross.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\disk-black-arrow.png">
@@ -57,10 +94,25 @@
     <Content Include="Images\globe--arrow.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Images\image--arrow.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\information.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\map--pencil.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Images\megaphone--plus.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\pencil-ruler.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\pencil.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\placeholder.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\textboxbackground.gif">

@@ -10,17 +10,24 @@ namespace MyChat.Model
 {
     public class UserSettings
     {
-        public string DefaultCustomInstructions { get; set; } = string.Empty;
-        public string SelectedChatModel { get; set; } = string.Empty;
+        public string DefaultCustomInstructions { get; set; } = "";
+        public string SelectedChatModel { get; set; } = "";
         public string DefaultTone { get; set; } = SystemPrompts.DefaultTone;
         public List<string> LastOpenFiles { get; set; } = [];
         public MainWindowInfo MainWindow { get; set; } = new();
+        public ImageToolWindowInfo ImageToolWindow { get; set; } = new();
 
         public class MainWindowInfo
         {
             public Rect Rectangle { get; set; }
             public double ChatColumnWidth { get; set; }
             public double MessageColumnWidth { get; set; }
+        }
+
+        public class ImageToolWindowInfo
+        {
+            public Rect Rectangle { get; set; }
+            public double PromptColumnWidth { get; set; }
         }
     }
 }

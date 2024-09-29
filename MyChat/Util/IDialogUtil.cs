@@ -10,10 +10,12 @@ namespace MyChat.Util
         UserDialogResult AllowFileClosure(ChatDocument document);
         void FailedToExportHTML(string filepath);
         void FailedToSaveDocument(string documentPath);
+        bool PromptForConfirmation(string message);
         string PromptForExportHTMLPath(string curDocumentPath);
         NewChatDTO PromptForNewChat();
         string PromptForOpenDocumentPath();
         string PromptForSaveDocumentPath(string filename);
+        string PromptForSaveImagePath();
         void ShowErrorMessage(string errorMessage);
     }
 }

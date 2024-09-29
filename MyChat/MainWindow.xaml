@@ -9,9 +9,11 @@
         Title="{Binding WindowTitle}" Height="600" Width="800" Closing="Window_Closing" Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" MinWidth="150"/>
+            <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="*" MinWidth="150"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -21,7 +23,7 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <ToolBarTray Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
+        <ToolBarTray Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="5">
             <ToolBar Band="0" BandIndex="0">
                 <Button ToolTip="Create a new chat" Command="{Binding NewDocumentCommand}" ToolBar.OverflowMode="Never">
                     <Button.Content>
@@ -91,7 +93,7 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
-                <Button ToolTip="Image tool..." ToolBar.OverflowMode="AsNeeded">
+                <Button ToolTip="Image tool..." ToolBar.OverflowMode="AsNeeded" Click="ImageTool_Click">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/pencil-ruler.png" Margin="3"/>
@@ -112,7 +114,8 @@
 
         <Label Grid.Column="0" Grid.Row="1" Content="Open Chats"/>
 
-        <ListView Grid.Column="0" Grid.Row="2" Grid.RowSpan="2" Margin="5,3,8,5" ItemsSource="{Binding OpenDocuments}" SelectedItem="{Binding CurrentDocument, Mode=TwoWay}">
+        <ListView Grid.Column="0" Grid.Row="2" Grid.RowSpan="2" Margin="5,3,3,5" ItemsSource="{Binding OpenDocuments}" 
+                  SelectedItem="{Binding CurrentDocument, Mode=TwoWay}" HorizontalAlignment="Stretch">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
@@ -138,12 +141,14 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <GridSplitter Grid.Column="0" Grid.Row="1" Grid.RowSpan="3" Background="{DynamicResource {x:Static SystemColors.ActiveCaptionBrushKey}}" 
-                      Width="5" HorizontalAlignment="Right" VerticalAlignment="Stretch"/>
+        <GridSplitter Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" Background="Gray" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-        <wv2:WebView2 Name="ChatViewer" Grid.Column="1" Grid.Row="2" Grid.RowSpan="2" Margin="3,3,3,5" />
+        <Border Grid.Column="2" Grid.Row="2" Grid.RowSpan="2" BorderThickness="1,1,1,1" Margin="3,3,3,5" BorderBrush="Black" >
+            <wv2:WebView2 Name="ChatViewer"/>
+        </Border>
 
-        <Grid Grid.Column="1" Grid.Row="1">
+
+        <Grid Grid.Column="2" Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
@@ -157,17 +162,16 @@
                      ToolTip="Provide a title for this chat"/>
         </Grid>
 
-        <GridSplitter Grid.Column="2" Grid.Row="1" Grid.RowSpan="3" Background="{DynamicResource {x:Static SystemColors.ActiveCaptionBrushKey}}" 
-                      Width="5" HorizontalAlignment="Left" VerticalAlignment="Stretch"/>
+        <GridSplitter Grid.Column="3" Grid.Row="1" Grid.RowSpan="3" Background="Gray" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-        <Label Grid.Column="2" Grid.Row="1" Content="Your Message"/>
+        <Label Grid.Column="4" Grid.Row="1" Content="Your Message"/>
 
-        <TextBox Grid.Column="2" Grid.Row="2" Margin="8,3,5,3" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" TextWrapping="WrapWithOverflow" 
+        <TextBox Grid.Column="4" Grid.Row="2" Margin="3,3,5,3" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" TextWrapping="WrapWithOverflow" 
                  Text="{Binding Prompt, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <Button Grid.Column="2" Grid.Row="3" Content="Send" HorizontalAlignment="Right" Margin="0,3,5,5" Command="{Binding SendPromptCommand}" Padding="5,1,5,1"/>
+        <Button Grid.Column="4" Grid.Row="3" Content="Send" HorizontalAlignment="Right" Margin="0,3,5,5" Command="{Binding SendPromptCommand}" Padding="5,1,5,1"/>
 
-        <StatusBar Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3">
+        <StatusBar Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="5">
             <StatusBarItem>
                 <TextBlock Text="{Binding CurrentChatModel}"/>
             </StatusBarItem>
@@ -176,7 +180,7 @@
                 <TextBlock Text="{Binding CurrentTone}"/>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <TextBlock Text="&#xE788;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                <TextBlock Text="&#xE788;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"/>
             </StatusBarItem>
         </StatusBar>
     </Grid>

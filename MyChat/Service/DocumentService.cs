@@ -24,7 +24,7 @@ namespace MyChat.Service
             string tonePrompt = string.IsNullOrEmpty(tone) ? SystemPrompts.SystemPromptMap[SystemPrompts.DefaultTone] : SystemPrompts.SystemPromptMap[tone];
             string systemPrompt = tonePrompt + " " + additionalInstructions;
             systemPrompt += string.IsNullOrEmpty(originalSummary) ? "" : $" This is a continuation of another chat with this summary: {originalSummary}";
-            ChatExchange systemExchange = new(systemPrompt, string.Empty, ExchangeType.System);
+            ChatExchange systemExchange = new(systemPrompt, "", ExchangeType.System);
 
             ChatDocument document = _repository.CreateDocument();
             document.Tone = string.IsNullOrEmpty(tone) ? SystemPrompts.DefaultTone : tone;
@@ -91,7 +91,7 @@ namespace MyChat.Service
 
         public string Undo(ChatDocument document)
         {
-            string undonePrompt = string.Empty;
+            string undonePrompt = "";
 
             if (document.Exchanges.Count < 1)
             {

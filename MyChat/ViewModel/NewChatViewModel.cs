@@ -7,8 +7,8 @@ namespace MyChat.ViewModel
     {
         private readonly ISettingsService _settings;
 
-        private string _customInstructions = string.Empty;
-        private string _tone = string.Empty;
+        private string _customInstructions = "";
+        private string _tone = "";
 
         public NewChatViewModel(ISettingsService settings)
         {

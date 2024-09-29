@@ -9,7 +9,7 @@ namespace MyChat.DTO
     public class NewChatDTO
     {
         public bool IsOk { get; set; }
-        public string CustomInstructions { get; set; } = string.Empty;
-        public string Tone { get; set; } = string.Empty;
+        public string CustomInstructions { get; set; } = "";
+        public string Tone { get; set; } = "";
     }
 }

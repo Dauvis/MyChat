@@ -48,8 +48,23 @@ namespace MyChat.Service
                 }
                 """));
 
+        private static readonly ChatTool _setImageGenerationPromptTool = ChatTool.CreateFunctionTool(
+            functionName: nameof(SetImageGenerationPrompt),
+            functionDescription: "Opens image generation tool and sets the prompt. This will not generate an image.",
+            functionParameters: BinaryData.FromString("""
+                {
+                    "type": "object",
+                    "properties": {
+                        "prompt": { "type": "string", "description": "The prompt for generating an image" }
+                    },
+                    "required": ["prompt"]
+                }
+                """));
+
         public event EventHandler<ChatTitleEventArgs>? ChatTitleEvent;
         public event EventHandler<NewChatEventArgs>? StartNewChatEvent;
+        private static EventHandler<ImageGenerationPromptEventArgs>? _imageGenerationPromptEvent;
+        private static EventHandler<OpenImageToolEventArgs>? _openImageToolEvent;
 
         public ChatTool GetChatTitleTool
         {
@@ -64,6 +79,11 @@ namespace MyChat.Service
         public ChatTool StartNewChatTool
         {
             get => _startNewChatTool;
+        }
+
+        public ChatTool SetImageGenerationPromptTool
+        {
+            get => _setImageGenerationPromptTool;
         }
 
         public string GetChatTitle()
@@ -86,6 +106,12 @@ namespace MyChat.Service
             OnStartNewChatEvent(args);
         }
 
+        public void SetImageGenerationPrompt(string prompt)
+        {
+            ImageGenerationPromptEventArgs args = new(prompt);
+            OnSetImageGenerationPromptEvent(args);
+        }
+
         public ExchangeToolCallCollection ProcessToolCalls(ChatCompletion chatCompletion, List<ChatMessage> chatMessages)
         {
             chatMessages.Add(new AssistantChatMessage(chatCompletion));
@@ -106,10 +132,10 @@ namespace MyChat.Service
                     case nameof(SetChatTitle):
                         {
                             using JsonDocument argumentsJson = JsonDocument.Parse(toolCall.FunctionArguments);
-                            bool hasPrompt = argumentsJson.RootElement.TryGetProperty("title", out JsonElement jsonPrompt);
-                            string? chatTitle = hasPrompt ? jsonPrompt.GetString() : null;
+                            bool hasTitle = argumentsJson.RootElement.TryGetProperty("title", out JsonElement jsonPrompt);
+                            string? chatTitle = hasTitle ? jsonPrompt.GetString() : null;
 
-                            if (!hasPrompt || chatTitle is null)
+                            if (!hasTitle || chatTitle is null)
                             {
                                 throw new NullReferenceException($"Title argument for {nameof(SetChatTitle)} was not provided");
                             }
@@ -124,21 +150,38 @@ namespace MyChat.Service
                         {
                             using JsonDocument argumentsJson = JsonDocument.Parse(toolCall.FunctionArguments);
                             bool hasSummary = argumentsJson.RootElement.TryGetProperty("summary", out JsonElement jsonSummary);
-                            string? summary = hasSummary ? jsonSummary.GetString() : string.Empty;
+                            string? summary = hasSummary ? jsonSummary.GetString() : "";
                             bool hasTitle = argumentsJson.RootElement.TryGetProperty("title", out JsonElement jsonTitle);
-                            string? title = hasTitle ? jsonTitle.GetString() : string.Empty;
+                            string? title = hasTitle ? jsonTitle.GetString() : "";
                             bool hasTone = argumentsJson.RootElement.TryGetProperty("tone", out JsonElement jsonTone);
-                            string? tone = hasTone ? jsonTone.GetString() : string.Empty;
+                            string? tone = hasTone ? jsonTone.GetString() : "";
                             bool hasInstructions = argumentsJson.RootElement.TryGetProperty("instructions", out JsonElement jsonInstructions);
-                            string? instructions = hasInstructions ? jsonInstructions.GetString() : string.Empty;
+                            string? instructions = hasInstructions ? jsonInstructions.GetString() : "";
 
-                            StartNewChat(string.IsNullOrEmpty(summary) ?  string.Empty : summary,
-                                string.IsNullOrEmpty(title) ? string.Empty : title,
-                                string.IsNullOrEmpty(tone) ? string.Empty : tone,
-                                string.IsNullOrEmpty(instructions) ? string.Empty : instructions);
+                            StartNewChat(string.IsNullOrEmpty(summary) ?  "" : summary,
+                                string.IsNullOrEmpty(title) ? "" : title,
+                                string.IsNullOrEmpty(tone) ? "" : tone,
+                                string.IsNullOrEmpty(instructions) ? "" : instructions);
 
                             toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments, toolCall.FunctionName, string.IsNullOrEmpty(title) ? "" : title));
                             chatMessages.Add(new ToolChatMessage(toolCall.Id, string.IsNullOrEmpty(title) ? "" : title));
+                            break;
+                        }
+
+                    case nameof(SetImageGenerationPrompt):
+                        {
+                            using JsonDocument argumentsJson = JsonDocument.Parse(toolCall.FunctionArguments);
+                            bool hasPrompt = argumentsJson.RootElement.TryGetProperty("prompt", out JsonElement jsonPrompt);
+                            string? imagePrompt = hasPrompt ? jsonPrompt.GetString() : null;
+
+                            if (!hasPrompt || imagePrompt is null)
+                            {
+                                throw new NullReferenceException($"Prompt argument for {nameof(SetImageGenerationPrompt)} was not provided");
+                            }
+
+                            SetImageGenerationPrompt(imagePrompt);
+                            toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments, toolCall.FunctionName, imagePrompt));
+                            chatMessages.Add(new ToolChatMessage(toolCall.Id, imagePrompt));
                             break;
                         }
 
@@ -152,6 +195,25 @@ namespace MyChat.Service
             return toolCalls;
         }
 
+        public void SubscribeToSetImageGenerationPrompt(EventHandler<ImageGenerationPromptEventArgs> handler)
+        {
+            _imageGenerationPromptEvent += handler;
+        }
+
+        public void UnsubscribeFromSetImageGenerationPrompt(EventHandler<ImageGenerationPromptEventArgs> handler)
+        {
+            _imageGenerationPromptEvent -= handler;
+        }
+
+        public void SubscribeToOpenImageTool(EventHandler<OpenImageToolEventArgs> handler)
+        {
+            _openImageToolEvent += handler;
+        }
+
+        public void UnsubscribeFromOpenImageTool(EventHandler<OpenImageToolEventArgs> handler)
+        {
+            _openImageToolEvent -= handler;
+        }
 
         private void OnChatTitleEvent(ChatTitleEventArgs e)
         {
@@ -161,6 +223,17 @@ namespace MyChat.Service
         private void OnStartNewChatEvent(NewChatEventArgs e)
         {
             StartNewChatEvent?.Invoke(this, e);
+        }
+
+        private void OnSetImageGenerationPromptEvent(ImageGenerationPromptEventArgs e)
+        {
+            _imageGenerationPromptEvent?.Invoke(this, e);
+
+            if (!e.Handled)
+            {
+                _openImageToolEvent?.Invoke(this, new());
+                _imageGenerationPromptEvent?.Invoke(this, e);
+            }
         }
     }
 }
