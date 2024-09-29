@@ -6,7 +6,8 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         xmlns:local="clr-namespace:MyChat"
         mc:Ignorable="d"
-        Title="{Binding WindowTitle}" Height="600" Width="800" Closing="Window_Closing" Loaded="Window_Loaded">
+        Title="{Binding WindowTitle}" Height="600" Width="800" Closing="Window_Closing" 
+        Loaded="Window_Loaded" Cursor="{Binding CurrentCursorState}">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="150"/>
@@ -93,7 +94,7 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
-                <Button ToolTip="Image tool..." ToolBar.OverflowMode="AsNeeded" Click="ImageTool_Click">
+                <Button ToolTip="Image tool..." ToolBar.OverflowMode="AsNeeded" Command="{Binding OpenImageToolCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/pencil-ruler.png" Margin="3"/>
@@ -101,7 +102,7 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
-                <Button ToolTip="Settings..." ToolBar.OverflowMode="AsNeeded" Click="SettingsButton_Click">
+                <Button ToolTip="Settings..." ToolBar.OverflowMode="AsNeeded" Command="{Binding OpenSettingsDialogCommand}">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/gear.png" Margin="3"/>

@@ -10,8 +10,6 @@ namespace MyChat.Service
 {
     public interface IDocumentService
     {
-        event EventHandler<OpenDocumentsChangedEventArgs>? OpenDocumentsChanged;
-
         IEnumerable<ChatDocument> OpenDocuments { get; }
         ChatDocument CreateDocument(string tone, string additionalInstructions, string originalSummary = "");
         ChatDocument? FindDocument(Guid identifier);
@@ -24,5 +22,7 @@ namespace MyChat.Service
         void Redo(ChatDocument document);
         void UpdateUserSettings(UserSettings userSettings);
         void OpenDocumentList(List<string> documentPaths);
+        void SubscribeToOpenDocumentsChanged(EventHandler<OpenDocumentsChangedEventArgs> handler);
+        void UnsubscribeFromOpenDocumentsChanged(EventHandler<OpenDocumentsChangedEventArgs> handler);
     }
 }

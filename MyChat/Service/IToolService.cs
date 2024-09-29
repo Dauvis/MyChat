@@ -11,15 +11,16 @@ namespace MyChat.Service
         ChatTool StartNewChatTool { get; }
         ChatTool SetImageGenerationPromptTool { get; }
 
-        event EventHandler<ChatTitleEventArgs>? ChatTitleEvent;
-        event EventHandler<NewChatEventArgs>? StartNewChatEvent;
-
         string GetChatTitle();
         ExchangeToolCallCollection ProcessToolCalls(ChatCompletion chatCompletion, List<ChatMessage> chatMessages);
         void SetChatTitle(string title);
         void StartNewChat(string summary = "", string title = "", string tone = "", string customInstructions = "");
+        void SubscribeToChatTitle(EventHandler<ChatTitleEventArgs> handler);
+        void SubscribeToNewChat(EventHandler<NewChatEventArgs> handler);
         void SubscribeToOpenImageTool(EventHandler<OpenImageToolEventArgs> handler);
         void SubscribeToSetImageGenerationPrompt(EventHandler<ImageGenerationPromptEventArgs> handler);
+        void UnsubscribeFromChatTitle(EventHandler<ChatTitleEventArgs> handler);
+        void UnsubscribeFromNewChat(EventHandler<NewChatEventArgs> handler);
         void UnsubscribeFromOpenImageTool(EventHandler<OpenImageToolEventArgs> handler);
         void UnsubscribeFromSetImageGenerationPrompt(EventHandler<ImageGenerationPromptEventArgs> handler);
     }

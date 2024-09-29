@@ -61,10 +61,10 @@ namespace MyChat.Service
                 }
                 """));
 
-        public event EventHandler<ChatTitleEventArgs>? ChatTitleEvent;
-        public event EventHandler<NewChatEventArgs>? StartNewChatEvent;
-        private static EventHandler<ImageGenerationPromptEventArgs>? _imageGenerationPromptEvent;
-        private static EventHandler<OpenImageToolEventArgs>? _openImageToolEvent;
+        private static event EventHandler<ChatTitleEventArgs>? _chatTitleEvent;
+        private static event EventHandler<NewChatEventArgs>? _startNewChatEvent;
+        private static event EventHandler<ImageGenerationPromptEventArgs>? _imageGenerationPromptEvent;
+        private static event EventHandler<OpenImageToolEventArgs>? _openImageToolEvent;
 
         public ChatTool GetChatTitleTool
         {
@@ -215,14 +215,34 @@ namespace MyChat.Service
             _openImageToolEvent -= handler;
         }
 
+        public void SubscribeToChatTitle(EventHandler<ChatTitleEventArgs> handler)
+        {
+            _chatTitleEvent += handler;
+        }
+
+        public void UnsubscribeFromChatTitle(EventHandler<ChatTitleEventArgs> handler)
+        {
+            _chatTitleEvent -= handler;
+        }
+
+        public void SubscribeToNewChat(EventHandler<NewChatEventArgs> handler)
+        {
+            _startNewChatEvent += handler;
+        }
+
+        public void UnsubscribeFromNewChat(EventHandler<NewChatEventArgs> handler)
+        {
+            _startNewChatEvent -= handler;
+        }
+
         private void OnChatTitleEvent(ChatTitleEventArgs e)
         {
-            ChatTitleEvent?.Invoke(this, e);
+            _chatTitleEvent?.Invoke(this, e);
         }
 
         private void OnStartNewChatEvent(NewChatEventArgs e)
         {
-            StartNewChatEvent?.Invoke(this, e);
+            _startNewChatEvent?.Invoke(this, e);
         }
 
         private void OnSetImageGenerationPromptEvent(ImageGenerationPromptEventArgs e)

@@ -5,7 +5,7 @@ namespace MyChat.Service
     public class SettingsService : ISettingsService
     {
         private readonly IUserSettingsRepository _userSettingsRepository;
-        private UserSettings? _userSettings = null;
+        private static UserSettings? _userSettings = null;
 
         public SettingsService(IUserSettingsRepository userSettingsRepository)
         {

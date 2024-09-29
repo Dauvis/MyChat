@@ -148,7 +148,7 @@ namespace MyChat.Util
 
             var dlgResult = newChatWindow.ShowDialog();
 
-            if (dlgResult == null || dlgResult == false)
+            if (dlgResult == false)
             {
                 return dto;
             }

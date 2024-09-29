@@ -10,7 +10,7 @@ namespace MyChat.Service
         private readonly List<ChatDocument> _openDocuments = [];
         private readonly IChatDocumentRepository _repository;
 
-        public event EventHandler<OpenDocumentsChangedEventArgs>? OpenDocumentsChanged;
+        private static event EventHandler<OpenDocumentsChangedEventArgs>? _openDocumentsChanged;
 
         public IEnumerable<ChatDocument> OpenDocuments => _openDocuments.AsEnumerable();
 
@@ -183,9 +183,19 @@ namespace MyChat.Service
             OnOpenDocumentsChanged(new(OpenDocumentsChangedAction.Removed, document.Metadata.Identifier));
         }
 
+        public void SubscribeToOpenDocumentsChanged(EventHandler<OpenDocumentsChangedEventArgs> handler)
+        {
+            _openDocumentsChanged += handler;
+        }
+
+        public void UnsubscribeFromOpenDocumentsChanged(EventHandler<OpenDocumentsChangedEventArgs> handler)
+        {
+            _openDocumentsChanged -= handler;
+        }
+
         private void OnOpenDocumentsChanged(OpenDocumentsChangedEventArgs e)
         {
-            OpenDocumentsChanged?.Invoke(this, e);
+            _openDocumentsChanged?.Invoke(this, e);
         }
     }
 }

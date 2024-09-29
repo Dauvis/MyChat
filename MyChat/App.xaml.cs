@@ -61,9 +61,9 @@ namespace MyChat
 
             services.AddTransient<IGPTService, GPTService>();
             services.AddTransient<IChatService, ChatService>();
-            services.AddSingleton<IDocumentService, DocumentService>();
-            services.AddSingleton<ISettingsService, SettingsService>();
-            services.AddSingleton<IToolService, ToolService>();
+            services.AddTransient<IDocumentService, DocumentService>();
+            services.AddTransient<ISettingsService, SettingsService>();
+            services.AddTransient<IToolService, ToolService>();
             services.AddTransient<IImageService, ImageService>();
 
             services.AddTransient<IDialogUtil, DialogUtil>();

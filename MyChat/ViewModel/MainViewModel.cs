@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 using MyChat.DTO;
 using MyChat.Messages;
 using MyChat.Model;
@@ -21,7 +22,9 @@ namespace MyChat.ViewModel
         private readonly IDialogUtil _dialogUtil;
         private readonly ISettingsService _settingsService;
         private readonly IToolService _toolService;
+        private readonly IServiceProvider _services;
         private string _prompt = "";
+        private Cursor? _currentCursor = null;
 
         public ICommand SendPromptCommand { get; }
         public ICommand NewDocumentCommand { get; }
@@ -33,30 +36,31 @@ namespace MyChat.ViewModel
         public ICommand RedoCommand { get; }
         public ICommand UndoCommand { get; }
         public ICommand ExportAsHTMLCommand { get; }
+        public ICommand OpenSettingsDialogCommand { get; }
+        public ICommand OpenImageToolCommand { get; }
 
-        public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil, ISettingsService settingsService, IToolService toolService)
+        public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil, 
+            ISettingsService settingsService, IToolService toolService, IServiceProvider services)
         {
-            SendPromptCommand = new AsyncRelayCommand(SendPromptAsync);
-            NewDocumentCommand = new RelayCommand(NewDocument);
-            OpenDocumentCommand = new RelayCommand(OpenDocument);
-            CloseDocumentCommand = new RelayCommand<object>(CloseDocument);
-            SaveDocumentCommand = new RelayCommand(SaveDocument);
-            SaveDocumentAsCommand = new RelayCommand(SaveDocumentAs);
-            SaveAllDocumentCommand = new RelayCommand(SaveAllDocument);
-            UndoCommand = new RelayCommand(Undo);
-            RedoCommand = new RelayCommand(Redo);
-            ExportAsHTMLCommand = new AsyncRelayCommand(ExportAsHTMLAsync);
+            SendPromptCommand = new AsyncRelayCommand(OnSendPromptAsync);
+            NewDocumentCommand = new RelayCommand(OnNewDocument);
+            OpenDocumentCommand = new RelayCommand(OnOpenDocument);
+            CloseDocumentCommand = new RelayCommand<object>(OnCloseDocument);
+            SaveDocumentCommand = new RelayCommand(OnSaveDocument);
+            SaveDocumentAsCommand = new RelayCommand(OnSaveDocumentAs);
+            SaveAllDocumentCommand = new RelayCommand(OnSaveAllDocument);
+            UndoCommand = new RelayCommand(OnUndo);
+            RedoCommand = new RelayCommand(OnRedo);
+            ExportAsHTMLCommand = new AsyncRelayCommand(OnExportAsHTMLAsync);
+            OpenSettingsDialogCommand = new RelayCommand(OnOpenSettingsDialog);
+            OpenImageToolCommand = new RelayCommand(OnOpenImageTool);
 
             _chatService = chatService;
             _documentService = documentService;
             _dialogUtil = dialogUtil;
             _settingsService = settingsService;
             _toolService = toolService;
-
-            _documentService.OpenDocumentsChanged += DocumentService_OpenDocumentsChanged;
-            _toolService.ChatTitleEvent += ToolService_ChatTitleEvent;
-            _toolService.StartNewChatEvent += ToolService_StartNewChatEvent;
-
+            _services = services;
             OpenDocuments = [];
             WeakReferenceMessenger.Default.Register<MainWindowStateMessage>(this, (r, m) => OnMainWindowState(m));
         }
@@ -67,6 +71,7 @@ namespace MyChat.ViewModel
             {
                 string tone = string.IsNullOrEmpty(e.Tone) ? _currentDocument.Tone : e.Tone;
                 string instructions = string.IsNullOrEmpty(e.Instructions) ? _currentDocument.CustomInstructions : e.Instructions;
+                Prompt = "";
 
                 _currentDocument = _documentService.CreateDocument(tone, instructions, e.Summary);
                 _currentDocument.DocumentName = e.Title;
@@ -96,6 +101,11 @@ namespace MyChat.ViewModel
         {
             if (message.StateAction == MainWindowStateAction.Startup)
             {
+                _documentService.SubscribeToOpenDocumentsChanged(DocumentService_OpenDocumentsChanged);
+                _toolService.SubscribeToChatTitle(ToolService_ChatTitleEvent);
+                _toolService.SubscribeToNewChat(ToolService_StartNewChatEvent);
+                _toolService.SubscribeToOpenImageTool(ToolService_OpenImageTool);
+
                 UserSettings userSettings = _settingsService.GetUserSettings();
                 _documentService.OpenDocumentList(userSettings.LastOpenFiles);
 
@@ -117,12 +127,22 @@ namespace MyChat.ViewModel
                 UserSettings userSettings = _settingsService.GetUserSettings();
                 _documentService.UpdateUserSettings(userSettings);
                 _settingsService.SetUserSettings(userSettings);
+
+                _documentService.UnsubscribeFromOpenDocumentsChanged(DocumentService_OpenDocumentsChanged);
+                _toolService.UnsubscribeFromChatTitle(ToolService_ChatTitleEvent);
+                _toolService.UnsubscribeFromNewChat(ToolService_StartNewChatEvent);
+                _toolService.UnsubscribeFromOpenImageTool(ToolService_OpenImageTool);
             }
 
             if (message.StateAction == MainWindowStateAction.Refresh)
             {
                 OnPropertyChanged("");
             }
+        }
+
+        private void ToolService_OpenImageTool(object? sender, OpenImageToolEventArgs e)
+        {
+            OpenImageToolWindow();
         }
 
         private void DocumentService_OpenDocumentsChanged(object? sender, OpenDocumentsChangedEventArgs e)
@@ -197,6 +217,12 @@ namespace MyChat.ViewModel
                     _currentDocument.Metadata.CurrentPrompt = value;
                 }
             }
+        }
+
+        public Cursor? CurrentCursorState
+        {
+            get => _currentCursor;
+            set => SetProperty(ref _currentCursor, value);
         }
 
         public string WindowTitle
@@ -289,9 +315,9 @@ namespace MyChat.ViewModel
             get => _currentDocument?.Tone ?? SystemPrompts.DefaultTone;
         }
 
-        private async Task SendPromptAsync()
+        private async Task OnSendPromptAsync()
         {
-            WeakReferenceMessenger.Default.Send(new CursorStateChangeMessage(true));
+            CurrentCursorState = Cursors.Wait;
 
             if (_currentDocument is not null)
             {
@@ -309,17 +335,21 @@ namespace MyChat.ViewModel
                 }
             }
 
-            WeakReferenceMessenger.Default.Send(new CursorStateChangeMessage(false));
+            CurrentCursorState = null;
         }
 
-        private void NewDocument()
+        private void OnNewDocument()
         {
             var newChatDto = _dialogUtil.PromptForNewChat();
-            _currentDocument = _documentService.CreateDocument(newChatDto.Tone, newChatDto.CustomInstructions);
-            OnPropertyChanged("");
+
+            if (newChatDto.IsOk)
+            {
+                _currentDocument = _documentService.CreateDocument(newChatDto.Tone, newChatDto.CustomInstructions);
+                OnPropertyChanged("");
+            }
         }
 
-        private void CloseDocument(object? parameter)
+        private void OnCloseDocument(object? parameter)
         {
             if (parameter is not null && _currentDocument is not null)
             {
@@ -345,7 +375,7 @@ namespace MyChat.ViewModel
             }
         }
 
-        public void OpenDocument()
+        public void OnOpenDocument()
         {
             string documentPath = _dialogUtil.PromptForOpenDocumentPath();
 
@@ -375,7 +405,7 @@ namespace MyChat.ViewModel
             }
         }
 
-        private void SaveDocumentAs()
+        private void OnSaveDocumentAs()
         {
             if (_currentDocument is not null)
             {
@@ -397,7 +427,7 @@ namespace MyChat.ViewModel
             }
         }
 
-        private void SaveDocument()
+        private void OnSaveDocument()
         {
             if (_currentDocument is not null)
             {
@@ -407,7 +437,7 @@ namespace MyChat.ViewModel
             }
         }
 
-        private void SaveAllDocument()
+        private void OnSaveAllDocument()
         {
             foreach (var document in OpenDocuments.Where(d => d.Metadata.IsDirty == true))
             {
@@ -439,7 +469,7 @@ namespace MyChat.ViewModel
             }
         }
 
-        public async Task ExportAsHTMLAsync()
+        public async Task OnExportAsHTMLAsync()
         {
             if (_currentDocument is not null)
             {
@@ -478,7 +508,7 @@ namespace MyChat.ViewModel
             OnPropertyChanged("");
         }
 
-        private void Undo()
+        private void OnUndo()
         {
             if (_currentDocument is not null)
             {
@@ -489,7 +519,7 @@ namespace MyChat.ViewModel
             }
         }
 
-        private void Redo()
+        private void OnRedo()
         {
             if (_currentDocument is not null)
             {
@@ -505,6 +535,24 @@ namespace MyChat.ViewModel
             var previous = _currentDocument;
             _currentDocument = document;
             SelectionChanged(document, previous);
+        }
+
+        private void OnOpenSettingsDialog()
+        {
+            var settingsWindow = _services.GetRequiredService<SettingsWindow>();
+            settingsWindow.ShowDialog();
+            OnPropertyChanged("");
+        }
+
+        private void OnOpenImageTool()
+        {
+            OpenImageToolWindow();
+        }
+
+        private void OpenImageToolWindow()
+        {
+            var imageToolWindow = _services.GetRequiredService<ImageToolWindow>();
+            imageToolWindow.Show();
         }
     }
 }
