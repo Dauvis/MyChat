@@ -7,19 +7,20 @@ namespace MyChat.ViewModel
     {
         private readonly ISettingsService _settings;
 
-        private string _customInstructions = "";
+        private string _instructions = "";
         private string _tone = "";
+        private string _topic = "";
 
         public NewChatViewModel(ISettingsService settings)
         {
             _settings = settings;
         }
 
-        public string CustomInstructions
+        public string Instructions
         {
-            get => _customInstructions;
+            get => _instructions;
 
-            set => SetProperty(ref _customInstructions, value);
+            set => SetProperty(ref _instructions, value);
         }
 
         public string Tone
@@ -29,11 +30,18 @@ namespace MyChat.ViewModel
             set => SetProperty(ref _tone, value);
         }
 
+        public string Topic
+        {
+            get => _topic;
+
+            set => SetProperty(ref _topic, value);
+        }
+
         public void LoadUserSettings()
         {
             var userSettings = _settings.GetUserSettings();
 
-            CustomInstructions = userSettings.DefaultCustomInstructions;
+            Instructions = userSettings.DefaultInstructions;
             Tone = userSettings.DefaultTone;
         }
     }

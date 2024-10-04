@@ -7,28 +7,29 @@ namespace MyChat.Service
 {
     public class DocumentService : IDocumentService
     {
-        private readonly List<ChatDocument> _openDocuments = [];
+        private static readonly List<ChatDocument> _openDocuments = [];
         private readonly IChatDocumentRepository _repository;
+        private readonly SystemMessageUtil _systemMessageUtil;
 
         private static event EventHandler<OpenDocumentsChangedEventArgs>? _openDocumentsChanged;
 
         public IEnumerable<ChatDocument> OpenDocuments => _openDocuments.AsEnumerable();
 
-        public DocumentService(IChatDocumentRepository repository)
+        public DocumentService(IChatDocumentRepository repository, SystemMessageUtil systemMessageUtil)
         {
             _repository = repository;
+            _systemMessageUtil = systemMessageUtil;
         }
 
-        public ChatDocument CreateDocument(string tone, string additionalInstructions, string originalSummary = "")
+        public ChatDocument CreateDocument(string tone, string instructions, string topic = "")
         {
-            string tonePrompt = string.IsNullOrEmpty(tone) ? SystemPrompts.SystemPromptMap[SystemPrompts.DefaultTone] : SystemPrompts.SystemPromptMap[tone];
-            string systemPrompt = tonePrompt + " " + additionalInstructions;
-            systemPrompt += string.IsNullOrEmpty(originalSummary) ? "" : $" This is a continuation of another chat with this summary: {originalSummary}";
+            string systemPrompt = _systemMessageUtil.ChatSystemMessage(tone, instructions, topic);
             ChatExchange systemExchange = new(systemPrompt, "", ExchangeType.System);
 
             ChatDocument document = _repository.CreateDocument();
-            document.Tone = string.IsNullOrEmpty(tone) ? SystemPrompts.DefaultTone : tone;
-            document.CustomInstructions = additionalInstructions;
+            document.Tone = string.IsNullOrEmpty(tone) ? _systemMessageUtil.DefaultTone : tone;
+            document.Instructions = instructions;
+            document.Topic = topic;
             document.AddExchange(systemExchange);
             PopulateMetadata("", document);
             AddOpenDocument(document);

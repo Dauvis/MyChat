@@ -10,9 +10,9 @@ namespace MyChat.Model
 {
     public class UserSettings
     {
-        public string DefaultCustomInstructions { get; set; } = "";
+        public string DefaultInstructions { get; set; } = "";
         public string SelectedChatModel { get; set; } = "";
-        public string DefaultTone { get; set; } = SystemPrompts.DefaultTone;
+        public string DefaultTone { get; set; } = "";
         public List<string> LastOpenFiles { get; set; } = [];
         public MainWindowInfo MainWindow { get; set; } = new();
         public ImageToolWindowInfo ImageToolWindow { get; set; } = new();

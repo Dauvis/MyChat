@@ -13,11 +13,13 @@ namespace MyChat
     public partial class SettingsWindow : Window
     {
         private readonly SettingsViewModel _viewModel;
+        private readonly SystemMessageUtil _systemMessageUtil;
 
-        public SettingsWindow(SettingsViewModel viewModel, IGPTService gptService)
+        public SettingsWindow(SettingsViewModel viewModel, IGPTService gptService, SystemMessageUtil systemMessageUtil)
         {
             InitializeComponent();
             _viewModel = viewModel;
+            _systemMessageUtil = systemMessageUtil;
             DataContext = viewModel;
             WeakReferenceMessenger.Default.Register<CloseWindowMessage>(this, (r, m) => CloseWindow());
 
@@ -45,7 +47,7 @@ namespace MyChat
         {
             ToneCombo.Items.Add("");
 
-            foreach (string tone in SystemPrompts.AvailableTones())
+            foreach (string tone in _systemMessageUtil.AvailableTones())
             {
                 ToneCombo.Items.Add(tone);
             }

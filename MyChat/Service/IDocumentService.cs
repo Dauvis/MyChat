@@ -11,7 +11,7 @@ namespace MyChat.Service
     public interface IDocumentService
     {
         IEnumerable<ChatDocument> OpenDocuments { get; }
-        ChatDocument CreateDocument(string tone, string additionalInstructions, string originalSummary = "");
+        ChatDocument CreateDocument(string tone, string instructions, string topic = "");
         ChatDocument? FindDocument(Guid identifier);
         ChatDocument? FindDocument(string documentPath);
         ChatDocument? OpenDocument(string documentPath);

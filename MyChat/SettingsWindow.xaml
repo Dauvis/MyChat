@@ -28,7 +28,7 @@
 
         <Label Grid.Column="0" Grid.Row="2" Content="Default Instructions"/>
         
-        <TextBox Grid.Column="1" Grid.Row="2" TextWrapping="WrapWithOverflow" AcceptsReturn="True" Text="{Binding DefaultCustomInstructions}" Margin="0,3,0,0"/>
+        <TextBox Grid.Column="1" Grid.Row="2" TextWrapping="WrapWithOverflow" AcceptsReturn="True" Text="{Binding DefaultInstructions}" Margin="0,3,0,0"/>
 
         <StackPanel Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
             <Button Content="Ok" Margin="3,0,3,0" Padding="5,1,5,1" Command="{Binding OkButtonClickedCommand}"/>

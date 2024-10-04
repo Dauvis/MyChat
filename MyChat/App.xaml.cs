@@ -72,6 +72,9 @@ namespace MyChat
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<NewChatViewModel>();
             services.AddTransient<ImageToolViewModel>();
+
+            var systemMessageUtil = SystemMessageUtil.Create();
+            services.AddSingleton(systemMessageUtil);
         }
 
         protected override void OnStartup(StartupEventArgs e)

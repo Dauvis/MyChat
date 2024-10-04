@@ -37,6 +37,7 @@
     <None Remove="Images\pencil.png" />
     <None Remove="Images\placeholder.png" />
     <None Remove="Images\textboxbackground.gif" />
+    <None Remove="SystemMessageData.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -119,6 +120,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="MyChatIcon.ico" />
+    <Content Include="SystemMessageData.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

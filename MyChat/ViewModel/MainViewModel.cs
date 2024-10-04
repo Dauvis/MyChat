@@ -23,8 +23,10 @@ namespace MyChat.ViewModel
         private readonly ISettingsService _settingsService;
         private readonly IToolService _toolService;
         private readonly IServiceProvider _services;
+        private readonly SystemMessageUtil _systemMessageUtil;
         private string _prompt = "";
         private Cursor? _currentCursor = null;
+        private ImageToolWindow? _imageToolWindow = null;
 
         public ICommand SendPromptCommand { get; }
         public ICommand NewDocumentCommand { get; }
@@ -40,7 +42,8 @@ namespace MyChat.ViewModel
         public ICommand OpenImageToolCommand { get; }
 
         public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil, 
-            ISettingsService settingsService, IToolService toolService, IServiceProvider services)
+            ISettingsService settingsService, IToolService toolService, IServiceProvider services,
+            SystemMessageUtil systemMessageUtil)
         {
             SendPromptCommand = new AsyncRelayCommand(OnSendPromptAsync);
             NewDocumentCommand = new RelayCommand(OnNewDocument);
@@ -61,6 +64,7 @@ namespace MyChat.ViewModel
             _settingsService = settingsService;
             _toolService = toolService;
             _services = services;
+            _systemMessageUtil = systemMessageUtil;
             OpenDocuments = [];
             WeakReferenceMessenger.Default.Register<MainWindowStateMessage>(this, (r, m) => OnMainWindowState(m));
         }
@@ -70,12 +74,12 @@ namespace MyChat.ViewModel
             if (_currentDocument is not null)
             {
                 string tone = string.IsNullOrEmpty(e.Tone) ? _currentDocument.Tone : e.Tone;
-                string instructions = string.IsNullOrEmpty(e.Instructions) ? _currentDocument.CustomInstructions : e.Instructions;
+                string instructions = string.IsNullOrEmpty(e.Instructions) ? _currentDocument.Instructions : e.Instructions;
                 Prompt = "";
 
-                _currentDocument = _documentService.CreateDocument(tone, instructions, e.Summary);
+                _currentDocument = _documentService.CreateDocument(tone, instructions, e.Topic);
                 _currentDocument.DocumentName = e.Title;
-                _currentDocument.OriginalSummary = e.Summary;
+                _currentDocument.Topic = e.Topic;
 
                 OnPropertyChanged("");
             }
@@ -111,7 +115,7 @@ namespace MyChat.ViewModel
 
                 if (OpenDocuments.Count == 0)
                 {
-                    _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultCustomInstructions);
+                    _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultInstructions);
                 }
                 else
                 {
@@ -170,7 +174,7 @@ namespace MyChat.ViewModel
                 if (OpenDocuments.Count == 0 || newSelection is null)
                 {
                     var userSettings = _settingsService.GetUserSettings();
-                    _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultCustomInstructions);
+                    _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultInstructions);
                     SetFocusOnDocument(_currentDocument);
                 }
                 else
@@ -312,7 +316,7 @@ namespace MyChat.ViewModel
 
         public string CurrentTone
         {
-            get => _currentDocument?.Tone ?? SystemPrompts.DefaultTone;
+            get => _currentDocument?.Tone ?? _systemMessageUtil.DefaultTone;
         }
 
         private async Task OnSendPromptAsync()
@@ -344,7 +348,7 @@ namespace MyChat.ViewModel
 
             if (newChatDto.IsOk)
             {
-                _currentDocument = _documentService.CreateDocument(newChatDto.Tone, newChatDto.CustomInstructions);
+                _currentDocument = _documentService.CreateDocument(newChatDto.Tone, newChatDto.Instructions, newChatDto.Topic);
                 OnPropertyChanged("");
             }
         }
@@ -551,8 +555,26 @@ namespace MyChat.ViewModel
 
         private void OpenImageToolWindow()
         {
-            var imageToolWindow = _services.GetRequiredService<ImageToolWindow>();
-            imageToolWindow.Show();
+            if (_imageToolWindow is null)
+            {
+                _imageToolWindow = _services.GetRequiredService<ImageToolWindow>();
+                _imageToolWindow.Show();
+                WeakReferenceMessenger.Default.Register<ImageToolWindowStateMessage>(this, (r, m) => OnImageToolWindowState(m));
+            }
+            else
+            {
+                _imageToolWindow.Show();
+                _imageToolWindow.Activate();
+            }
+        }
+
+        private void OnImageToolWindowState(ImageToolWindowStateMessage m)
+        {
+            if (m.StateAction == ImageToolWindowStateAction.Shutdown)
+            {
+                WeakReferenceMessenger.Default.Unregister<ImageToolWindowStateMessage>(this);
+                _imageToolWindow = null;
+            }
         }
     }
 }

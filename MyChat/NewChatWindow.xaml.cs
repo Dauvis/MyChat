@@ -10,12 +10,14 @@ namespace MyChat
     public partial class NewChatWindow : Window
     {
         private NewChatViewModel _viewModel;
+        private readonly SystemMessageUtil _systemMessageUtil;
 
-        public NewChatWindow(NewChatViewModel viewModel)
+        public NewChatWindow(NewChatViewModel viewModel, SystemMessageUtil systemMessageUtil)
         {
             InitializeComponent();
             DataContext = viewModel;
             _viewModel = viewModel;
+            _systemMessageUtil = systemMessageUtil;
             _viewModel.LoadUserSettings();
 
             InitToneCombo();
@@ -25,7 +27,7 @@ namespace MyChat
         {
             ToneCombo.Items.Add("");
 
-            foreach (string tone in SystemPrompts.AvailableTones())
+            foreach (string tone in _systemMessageUtil.AvailableTones())
             {
                 ToneCombo.Items.Add(tone);
             }

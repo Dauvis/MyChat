@@ -156,8 +156,9 @@ namespace MyChat.Util
             NewChatViewModel dlgViewModel = (NewChatViewModel)newChatWindow.DataContext;
 
             dto.IsOk = true;
-            dto.CustomInstructions = dlgViewModel.CustomInstructions;
+            dto.Instructions = dlgViewModel.Instructions;
             dto.Tone = dlgViewModel.Tone;
+            dto.Topic = dlgViewModel.Topic;
 
             return dto;
         }

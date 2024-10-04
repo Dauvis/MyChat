@@ -34,15 +34,15 @@ namespace MyChat.Service
 
         private static readonly ChatTool _startNewChatTool = ChatTool.CreateFunctionTool(
             functionName: nameof(StartNewChat),
-            functionDescription: "Creates a new chat and changes focus to it. If tone and custom instructions are not supplied, the new chat will inherit from the original.",
+            functionDescription: "Creates a new chat and changes focus to it. If tone and instructions are not supplied, the new chat will inherit from the original.",
             functionParameters: BinaryData.FromString("""
                 {
                     "type": "object",
                     "properties": {
-                        "summary": { "type": "string", "description": "Optional summarization of original chat" },
+                        "tone": { "type": "string", "description": "Optional tone for the new chat. Acceptable values are Approachable, Professional, Empathetic, Instructive, Casual, Motivational, Light-hearted, Collaborative, Creative, Exploration, Technical"  },
                         "title": { "type": "string", "description": "Optional title for the new chat" },
-                        "tone": { "type": "string", "description": "Optional tone for the new chat. Acceptable values are Helpful, Friendly, Professional, Enthusiastic, Empathetic, Informative, Casual, Concise, Encouraging, Playful, Inquisitive, Mentor, Technical"  },
-                        "instructions": { "type": "string", "description": "Optional custom instructions for the new chat" }
+                        "topic": { "type": "string", "description": "Optional topic of discussion" },
+                        "instructions": { "type": "string", "description": "Optional instructions for the new chat" }
                     },
                     "required": []
                 }
@@ -100,9 +100,9 @@ namespace MyChat.Service
             OnChatTitleEvent(args);
         }
 
-        public void StartNewChat(string summary = "", string title = "", string tone = "", string customInstructions = "")
+        public void StartNewChat(string topic = "", string title = "", string tone = "", string instructions = "")
         {
-            NewChatEventArgs args = new(summary, title, tone, customInstructions);
+            NewChatEventArgs args = new(topic, title, tone, instructions);
             OnStartNewChatEvent(args);
         }
 
@@ -149,8 +149,8 @@ namespace MyChat.Service
                     case nameof(StartNewChat):
                         {
                             using JsonDocument argumentsJson = JsonDocument.Parse(toolCall.FunctionArguments);
-                            bool hasSummary = argumentsJson.RootElement.TryGetProperty("summary", out JsonElement jsonSummary);
-                            string? summary = hasSummary ? jsonSummary.GetString() : "";
+                            bool hasTopic = argumentsJson.RootElement.TryGetProperty("topic", out JsonElement jsonTopic);
+                            string? topic = hasTopic ? jsonTopic.GetString() : "";
                             bool hasTitle = argumentsJson.RootElement.TryGetProperty("title", out JsonElement jsonTitle);
                             string? title = hasTitle ? jsonTitle.GetString() : "";
                             bool hasTone = argumentsJson.RootElement.TryGetProperty("tone", out JsonElement jsonTone);
@@ -158,7 +158,7 @@ namespace MyChat.Service
                             bool hasInstructions = argumentsJson.RootElement.TryGetProperty("instructions", out JsonElement jsonInstructions);
                             string? instructions = hasInstructions ? jsonInstructions.GetString() : "";
 
-                            StartNewChat(string.IsNullOrEmpty(summary) ?  "" : summary,
+                            StartNewChat(string.IsNullOrEmpty(topic) ?  "" : topic,
                                 string.IsNullOrEmpty(title) ? "" : title,
                                 string.IsNullOrEmpty(tone) ? "" : tone,
                                 string.IsNullOrEmpty(instructions) ? "" : instructions);
@@ -247,13 +247,8 @@ namespace MyChat.Service
 
         private void OnSetImageGenerationPromptEvent(ImageGenerationPromptEventArgs e)
         {
+            _openImageToolEvent?.Invoke(this, new());
             _imageGenerationPromptEvent?.Invoke(this, e);
-
-            if (!e.Handled)
-            {
-                _openImageToolEvent?.Invoke(this, new());
-                _imageGenerationPromptEvent?.Invoke(this, e);
-            }
         }
     }
 }

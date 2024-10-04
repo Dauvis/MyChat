@@ -13,7 +13,7 @@ namespace MyChat.ViewModel
         private readonly ISettingsService _settings;
         private readonly IGPTService _gptService;
 
-        private string _defaultCustomInstructions = "";
+        private string _defaultInstructions = "";
         private string _selectedModel = "";
         private string _defaultTone = "";
 
@@ -28,11 +28,11 @@ namespace MyChat.ViewModel
             CancelButtonClickedCommand = new RelayCommand(OnCancelButtonClicked);
         }
 
-        public string DefaultCustomInstructions
+        public string DefaultInstructions
         {
-            get => _defaultCustomInstructions;
+            get => _defaultInstructions;
 
-            set => SetProperty(ref _defaultCustomInstructions, value);
+            set => SetProperty(ref _defaultInstructions, value);
         }
 
         public string SelectedModel
@@ -64,7 +64,7 @@ namespace MyChat.ViewModel
         {
             var userSettings = _settings.GetUserSettings();
 
-            DefaultCustomInstructions = userSettings.DefaultCustomInstructions;
+            DefaultInstructions = userSettings.DefaultInstructions;
             SelectedModel = userSettings.SelectedChatModel;
             DefaultTone = userSettings.DefaultTone;
         }
@@ -73,7 +73,7 @@ namespace MyChat.ViewModel
         {
             var userSettings = _settings.GetUserSettings();
 
-            userSettings.DefaultCustomInstructions = _defaultCustomInstructions;
+            userSettings.DefaultInstructions = _defaultInstructions;
             userSettings.SelectedChatModel = _selectedModel;
             userSettings.DefaultTone = _defaultTone;
 

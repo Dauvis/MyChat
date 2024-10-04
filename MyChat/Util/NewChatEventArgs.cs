@@ -8,15 +8,15 @@ namespace MyChat.Util
 {
     public class NewChatEventArgs : EventArgs
     {
-        public NewChatEventArgs(string summary, string title, string tone, string instructions)
+        public NewChatEventArgs(string topic, string title, string tone, string instructions)
         {
-            Summary = summary;
+            Topic = topic;
             Title = title;
             Tone = tone;
             Instructions = instructions;
         }
 
-        public string Summary { get; set; }
+        public string Topic { get; set; }
         public string Title { get; set; }
         public string Tone { get; set; }
         public string Instructions { get; set; }

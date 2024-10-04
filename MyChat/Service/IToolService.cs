@@ -14,7 +14,7 @@ namespace MyChat.Service
         string GetChatTitle();
         ExchangeToolCallCollection ProcessToolCalls(ChatCompletion chatCompletion, List<ChatMessage> chatMessages);
         void SetChatTitle(string title);
-        void StartNewChat(string summary = "", string title = "", string tone = "", string customInstructions = "");
+        void StartNewChat(string topic = "", string title = "", string tone = "", string instructions = "");
         void SubscribeToChatTitle(EventHandler<ChatTitleEventArgs> handler);
         void SubscribeToNewChat(EventHandler<NewChatEventArgs> handler);
         void SubscribeToOpenImageTool(EventHandler<OpenImageToolEventArgs> handler);

@@ -15,9 +15,9 @@ namespace MyChat.Model
             set => SetProperty(ref _documentName, value);
         }
 
-        public string CustomInstructions { get; set; } = "";
+        public string Instructions { get; set; } = "";
         public string Tone { get; set; } = "";
-        public string OriginalSummary { get; set; } = "";
+        public string Topic { get; set; } = "";
         public LinkedList<ChatExchange> Exchanges { get; set; } = [];
         public int TotalWeight { get; set; }
         public int TotalTokens { get; set; }
@@ -92,7 +92,7 @@ namespace MyChat.Model
 
         private string DocumentHeaderHTML(bool isExport = false)
         {
-            bool addHeader = isExport || !string.IsNullOrEmpty(CustomInstructions) || !string.IsNullOrEmpty(OriginalSummary);
+            bool addHeader = isExport || !string.IsNullOrEmpty(Instructions) || !string.IsNullOrEmpty(Topic);
 
             StringBuilder builder = new();
 
@@ -105,14 +105,14 @@ namespace MyChat.Model
                     builder.Append($"<li><strong>Tone:</strong> {Tone}</li>");
                 }                
 
-                if (!string.IsNullOrEmpty(CustomInstructions))
+                if (!string.IsNullOrEmpty(Instructions))
                 {
-                    builder.Append($"<li><strong>Custom Instructions:</strong> {CustomInstructions}</li>");
+                    builder.Append($"<li><strong>Instructions:</strong> {Instructions}</li>");
                 }
 
-                if (!string.IsNullOrEmpty(OriginalSummary))
+                if (!string.IsNullOrEmpty(Topic))
                 {
-                    builder.Append($"<li><strong>Original Summary:</strong> {OriginalSummary}</li>");
+                    builder.Append($"<li><strong>Topic:</strong> {Topic}</li>");
                 }
 
                 builder.Append("</ul></div><br/>");
