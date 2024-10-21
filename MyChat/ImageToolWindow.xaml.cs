@@ -95,14 +95,14 @@ namespace MyChat
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            WeakReferenceMessenger.Default.Send(new ImageToolWindowStateMessage(ImageToolWindowStateAction.Shutdown));
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Closing, WindowType.ImageTool));
             HandleWindowClosed();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             HandleWindowLoaded();
-            WeakReferenceMessenger.Default.Send(new ImageToolWindowStateMessage(ImageToolWindowStateAction.Startup));
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Loaded, WindowType.ImageTool));
         }
     }
 }

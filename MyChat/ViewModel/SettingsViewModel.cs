@@ -52,12 +52,12 @@ namespace MyChat.ViewModel
         private void OnOkButtonClicked()
         {
             SaveUserSettings();
-            WeakReferenceMessenger.Default.Send(new CloseWindowMessage());
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.DoClose, WindowType.Setting));
         }
 
         private void OnCancelButtonClicked()
         {
-            WeakReferenceMessenger.Default.Send(new CloseWindowMessage());
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.DoClose, WindowType.Setting));
         }
 
         public void LoadUserSettings()

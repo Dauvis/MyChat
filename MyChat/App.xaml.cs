@@ -29,14 +29,6 @@ namespace MyChat
 
         private const int SW_RESTORE = 9; // Restore window if minimized
 
-#if DEBUG
-        private const string _applicationInstanceId = "{E026C9F8-9B5D-44E7-BA40-07C8F39E47F1}";
-        private const string _applicationPipeName = "MyChatDebugNamedPipe";
-#else
-        private const string _applicationInstanceId = "{ABA1841A-9E7D-4524-897F-FA022F9EC4C7}";
-        private const string _applicationPipeName = "MyChatApplicationNamedPipe";
-#endif
-
         private static Mutex? _applicationMutex;
 
         private readonly IServiceProvider _serviceProvider;
@@ -54,10 +46,12 @@ namespace MyChat
             services.AddTransient<SettingsWindow>();
             services.AddTransient<NewChatWindow>();
             services.AddTransient<ImageToolWindow>();
+            services.AddTransient<ChatTemplatesWindow>();
 
             services.AddTransient<IChatDocumentRepository, ChatDocumentRepository>();
             services.AddTransient<IUserSettingsRepository, UserSettingsRepository>();
             services.AddTransient<IImageInformationRepository, ImageInformationRepository>();
+            services.AddTransient<IChatTemplateRepository, ChatTemplateRepository>();
 
             services.AddTransient<IGPTService, GPTService>();
             services.AddTransient<IChatService, ChatService>();
@@ -72,6 +66,7 @@ namespace MyChat
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<NewChatViewModel>();
             services.AddTransient<ImageToolViewModel>();
+            services.AddTransient<ChatTemplatesViewModel>();
 
             var systemMessageUtil = SystemMessageUtil.Create();
             services.AddSingleton(systemMessageUtil);
@@ -80,7 +75,7 @@ namespace MyChat
         protected override void OnStartup(StartupEventArgs e)
         {
             // Create SingleInstance Mutex
-            _applicationMutex = new Mutex(true, _applicationInstanceId);
+            _applicationMutex = new Mutex(true, Constants.ApplicationInstanceId);
             var isOnlyInstance = _applicationMutex.WaitOne(TimeSpan.Zero, true);
 
             if (isOnlyInstance)
@@ -153,7 +148,7 @@ namespace MyChat
                 {
                     try
                     {
-                        using var pipeServer = new NamedPipeServerStream(_applicationPipeName, PipeDirection.In);
+                        using var pipeServer = new NamedPipeServerStream(Constants.ApplicationPipeName, PipeDirection.In);
 
                         pipeServer.WaitForConnection();
                         using var reader = new StreamReader(pipeServer);
@@ -183,7 +178,7 @@ namespace MyChat
         {
             try
             {
-                using var pipeClient = new NamedPipeClientStream(".", _applicationPipeName, PipeDirection.Out);
+                using var pipeClient = new NamedPipeClientStream(".", Constants.ApplicationPipeName, PipeDirection.Out);
 
                 pipeClient.Connect(1000);
 

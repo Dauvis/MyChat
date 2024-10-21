@@ -21,12 +21,15 @@
     <None Remove="Images\arrow-stop.png" />
     <None Remove="Images\arrow.png" />
     <None Remove="Images\book-open.png" />
+    <None Remove="Images\chevron-expand.png" />
     <None Remove="Images\cross-small-white.png" />
     <None Remove="Images\cross-white.png" />
     <None Remove="Images\cross.png" />
     <None Remove="Images\disk-black-arrow.png" />
     <None Remove="Images\disk-black.png" />
     <None Remove="Images\disks-black.png" />
+    <None Remove="Images\document-template.png" />
+    <None Remove="Images\edit-list.png" />
     <None Remove="Images\gear.png" />
     <None Remove="Images\globe--arrow.png" />
     <None Remove="Images\image--arrow.png" />
@@ -36,7 +39,9 @@
     <None Remove="Images\pencil-ruler.png" />
     <None Remove="Images\pencil.png" />
     <None Remove="Images\placeholder.png" />
+    <None Remove="Images\plus.png" />
     <None Remove="Images\textboxbackground.gif" />
+    <None Remove="Images\ui-scroll-pane-tree.png" />
     <None Remove="SystemMessageData.json" />
   </ItemGroup>
 
@@ -71,6 +76,9 @@
     <Content Include="Images\book-open.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Images\chevron-expand.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Images\cross-small-white.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -87,6 +95,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\disks-black.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\document-template.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\edit-list.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\gear.png">
@@ -116,7 +130,13 @@
     <Content Include="Images\placeholder.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Images\plus.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Images\textboxbackground.gif">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\ui-scroll-pane-tree.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="MyChatIcon.ico" />

@@ -26,14 +26,34 @@
 
         <ToolBarTray Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="5">
             <ToolBar Band="0" BandIndex="0">
-                <Button ToolTip="Create a new chat" Command="{Binding NewDocumentCommand}" ToolBar.OverflowMode="Never">
-                    <Button.Content>
+                <ToggleButton x:Name="NewDocumentButton" ToolTip="Create a new chat" ToolBar.OverflowMode="Never">
+                    <ToggleButton.Content>
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/megaphone--plus.png" Margin="3"/>
                             <TextBlock Text="New" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                            <Image Source="Images/chevron-expand.png" Margin="3"/>
+                            <Popup Name="NewDocumentPopup" IsOpen="{Binding IsChecked, ElementName=NewDocumentButton}" StaysOpen="False">
+                                <Border BorderThickness="1">
+                                    <Menu ItemsSource="{Binding TemplateMRU}">
+                                        <Menu.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Content="{Binding Name}" Width="150" Background="Transparent" BorderBrush="Transparent"
+                                                        Command="{Binding DataContext.NewDocumentCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                        CommandParameter="{Binding}"
+                                                        HorizontalContentAlignment="Left"/>
+                                            </DataTemplate>
+                                        </Menu.ItemTemplate>
+                                        <Menu.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <VirtualizingStackPanel Orientation="Vertical"/>
+                                            </ItemsPanelTemplate>
+                                        </Menu.ItemsPanel>
+                                    </Menu>
+                                </Border>
+                            </Popup>
                         </StackPanel>
-                    </Button.Content>
-                </Button>
+                    </ToggleButton.Content>
+                </ToggleButton>
                 <Button ToolTip="Open previously saved chat" Command="{Binding OpenDocumentCommand}" ToolBar.OverflowMode="Never">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
@@ -99,6 +119,14 @@
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/pencil-ruler.png" Margin="3"/>
                             <TextBlock Text="Image Tool" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+                <Button ToolTip="Manage chat templates..." ToolBar.OverflowMode="AsNeeded" Command="{Binding OpenChatTemplatesCommand}">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/document-template.png" Margin="3"/>
+                            <TextBlock Text="Templates" VerticalAlignment="Center" Margin="3,0,0,0"/>
                         </StackPanel>
                     </Button.Content>
                 </Button>
@@ -181,7 +209,10 @@
                 <TextBlock Text="{Binding CurrentTone}"/>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <TextBlock Text="&#xE788;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"/>
+                <StackPanel Orientation="Horizontal">
+                    <ProgressBar Width="150" Height="15" Value="{Binding TokenUsageBarValue, Mode=OneWay}" Foreground="{Binding TokenUsageBarColor}"/>
+                    <TextBlock Text="&#xE788;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"/>
+                </StackPanel>
             </StatusBarItem>
         </StatusBar>
     </Grid>

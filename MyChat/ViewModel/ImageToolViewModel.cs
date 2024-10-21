@@ -75,7 +75,7 @@ namespace MyChat.ViewModel
             var bitmapImage = GetImageSource(GetImagePath(_currentIndex));
             _currentBitmapImage = bitmapImage;
 
-            WeakReferenceMessenger.Default.Register<ImageToolWindowStateMessage>(this, (r, m) => OnImageToolWindowState(m));
+            WeakReferenceMessenger.Default.Register<WindowEventMessage>(this, (r, m) => OnImageToolWindowState(m));
         }
 
         public string Prompt
@@ -379,16 +379,19 @@ namespace MyChat.ViewModel
             }
         }
 
-        private void OnImageToolWindowState(ImageToolWindowStateMessage m)
+        private void OnImageToolWindowState(WindowEventMessage m)
         {
-            if (m.StateAction == ImageToolWindowStateAction.Startup)
+            if (m.Type == WindowType.ImageTool)
             {
-                _toolService.SubscribeToSetImageGenerationPrompt(ToolService_SetPrompt);
-            }
-            else if (m.StateAction == ImageToolWindowStateAction.Shutdown)
-            {
-                _toolService.UnsubscribeFromSetImageGenerationPrompt(ToolService_SetPrompt);
-                WeakReferenceMessenger.Default.Unregister<ImageToolWindowStateMessage>(this);
+                if (m.State == WindowEventType.Loaded)
+                {
+                    _toolService.SubscribeToSetImageGenerationPrompt(ToolService_SetPrompt);
+                }
+                else if (m.State == WindowEventType.Closing)
+                {
+                    _toolService.UnsubscribeFromSetImageGenerationPrompt(ToolService_SetPrompt);
+                    WeakReferenceMessenger.Default.Unregister<WindowEventMessage>(this);
+                }
             }
         }
 

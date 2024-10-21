@@ -1,5 +1,6 @@
 ﻿using MyChat.DTO;
 using MyChat.Model;
+using MyChat.Util;
 using System.IO;
 using System.Text.Json;
 
@@ -7,12 +8,6 @@ namespace MyChat.Data
 {
     public class ImageInformationRepository : IImageInformationRepository
     {
-#if DEBUG
-        private const string _userAppFolderName = "MyChat_Debug";
-#else
-        private const string _userAppFolderName = "MyChat";
-#endif
-
         private string _userImageMetaPath = "";
         private string _userPicturesFolder = "";
 
@@ -183,9 +178,9 @@ namespace MyChat.Data
             if (string.IsNullOrEmpty(_userImageMetaPath))
             {
                 string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string userAppFolder = Path.Combine(appDataPath, _userAppFolderName);
+                string userAppFolder = Path.Combine(appDataPath, Constants.UserAppFolderName);
                 Directory.CreateDirectory(userAppFolder);
-                _userImageMetaPath = Path.Combine(userAppFolder, "imagemetadata.json");
+                _userImageMetaPath = Path.Combine(userAppFolder, Constants.ImageMetadataFileName);
             }
 
             return _userImageMetaPath;
@@ -196,7 +191,7 @@ namespace MyChat.Data
             if (string.IsNullOrEmpty(_userPicturesFolder))
             {
                 string picturesFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-                _userPicturesFolder = Path.Combine(picturesFolder, _userAppFolderName);
+                _userPicturesFolder = Path.Combine(picturesFolder, Constants.UserAppFolderName);
                 Directory.CreateDirectory(_userPicturesFolder);
             }
 

@@ -7,6 +7,7 @@ using MyChat.ViewModel;
 using System;
 using System.ComponentModel;
 using System.Net.Http;
+using System.Text.Encodings.Web;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -59,23 +60,31 @@ namespace MyChat
             _settingsService.SetUserSettings(settings);
 
             WeakReferenceMessenger.Default.Unregister<ChatViewUpdatedMessage>(this);
-            WeakReferenceMessenger.Default.Send(new MainWindowStateMessage(MainWindowStateAction.Shutdown));
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Closing, WindowType.Main));
 
             Application.Current.Shutdown();
         }
 
-        private async Task OnChatViewUpdatedAsync(ChatViewUpdatedMessage message)
+        private async Task OnChatViewUpdatedMessageAsync(ChatViewUpdatedMessage message)
         {
             await ChatViewer.EnsureCoreWebView2Async();
+            string untickedText = message.ChatText.Replace("`", "'"); // I don't like backticks
 
-            if (message.IsReplacement)
+            string scrollYPosition = "0";
+
+            if (!message.IsReplacement)
             {
-                ChatViewer.NavigateToString(string.Format(HTMLConstants.DocumentTemplate, message.ChatText));
+                var jsResult = await ChatViewer.CoreWebView2.ExecuteScriptWithResultAsync("window.scrollY.toString()");
+
+                if (jsResult.Succeeded)
+                {
+                    jsResult.TryGetResultAsString(out scrollYPosition, out _);
+                }
             }
-            else
-            {
-                await ChatViewer.CoreWebView2.ExecuteScriptAsync($"document.body.innerHTML = `{message.ChatText}`;");
-            }
+
+            ChatViewer.NavigateToString(string.Format(HTMLConstants.DocumentTemplate, untickedText));
+            await Task.Delay(500);
+            await ChatViewer.CoreWebView2.ExecuteScriptAsync($"window.scroll(0, {scrollYPosition});");
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -94,8 +103,20 @@ namespace MyChat
                 columns[4].Width = new(settings.MainWindow.MessageColumnWidth);
             }
 
-            WeakReferenceMessenger.Default.Register<ChatViewUpdatedMessage>(this, async (r, m) => await OnChatViewUpdatedAsync(m));
-            WeakReferenceMessenger.Default.Send(new MainWindowStateMessage(MainWindowStateAction.Startup));
+            WeakReferenceMessenger.Default.Register<ChatViewUpdatedMessage>(this, async (r, m) => await OnChatViewUpdatedMessageAsync(m));
+            WeakReferenceMessenger.Default.Register<WindowEventMessage>(this, (r, m) => OnWindowEventMessage(m));
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Loaded, WindowType.Main));
+        }
+
+        private void OnWindowEventMessage(WindowEventMessage m)
+        {
+            if (m.Type == WindowType.NewDocumentPopup)
+            {
+                if (m.State == WindowEventType.DoClose)
+                {
+                    NewDocumentPopup.IsOpen = false;
+                }
+            }
         }
     }
 }

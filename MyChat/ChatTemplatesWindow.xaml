@@ -1,0 +1,111 @@
+﻿<Window x:Class="MyChat.ChatTemplatesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MyChat"
+        mc:Ignorable="d"
+        Title="Chat Templates" Height="450" Width="800" ResizeMode="NoResize" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Grid Margin="5,5,5,5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="150"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <ToolBarTray Grid.Column="0" Grid.Row="0">
+            <ToolBar Band="0" BandIndex="0">
+                <Button Command="{Binding NewTemplateClickCommand}">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/plus.png" Margin="3"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+                <Button Command="{Binding DeleteTemplateClickCommand}">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/cross.png" Margin="3"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+            </ToolBar>
+            <ToolBar Band="0" BandIndex="1">
+                <ToggleButton x:Name="ShowTreeButton" IsChecked="{Binding ShowTreeState}" Command="{Binding ShowTreeClickCommand}" >
+                    <ToggleButton.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/ui-scroll-pane-tree.png" Margin="3"/>
+                        </StackPanel>
+                    </ToggleButton.Content>
+                </ToggleButton>
+                <ToggleButton x:Name="ShowListButton" IsChecked="{Binding ShowListState}" Command="{Binding ShowListClickCommand}">
+                    <ToggleButton.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/edit-list.png" Margin="3"/>
+                        </StackPanel>
+                    </ToggleButton.Content>
+                </ToggleButton>
+            </ToolBar>
+        </ToolBarTray>
+
+        <TreeView Grid.Column="0" Grid.Row="1" Grid.RowSpan="5" Margin="0,0,5,5" ItemsSource="{Binding TreeNodes}" 
+                  SelectedItemChanged="TreeView_SelectedItemChanged">
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                    <TextBlock Text="{Binding Title}"/>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                </Style>
+            </TreeView.ItemContainerStyle>
+        </TreeView>
+        
+        <Button Grid.Column="0" Grid.Row="6" HorizontalAlignment="Right" Margin="0,0,5,0" Command="{Binding NewChatClickCommand}">
+            <Button.Content>
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="Images/megaphone--plus.png" Margin="3"/>
+                    <TextBlock Text="New Chat" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                </StackPanel>
+            </Button.Content>
+        </Button>
+
+        <Label Grid.Column="1" Grid.Row="0" Content="Name"/>
+        <TextBox Grid.Column="2" Grid.Row="0" Margin="0,0,0,5" Text="{Binding CurrentTemplate.Name}" IsEnabled="{Binding EditingAllowed}"/>
+
+        <Label Grid.Column="1" Grid.Row="1" Content="Category"/>
+        <TextBox Grid.Column="2" Grid.Row="1" Margin="0,0,0,5" Text="{Binding CurrentTemplate.Category}" IsEnabled="{Binding EditingAllowed}"/>
+
+        <Label Grid.Column="1" Grid.Row="2" Content="Description"/>
+        <TextBox Grid.Column="2" Grid.Row="2" Margin="0,0,0,5"  Text="{Binding CurrentTemplate.Description}" IsEnabled="{Binding EditingAllowed}"/>
+
+        <Label Grid.Column="1" Grid.Row="3" Content="Tone"/>
+        <ComboBox Grid.Column="2" Grid.Row="3" Width="150" x:Name="ToneCombo" HorizontalAlignment="Left" Margin="0,0,0,5" 
+                  SelectedValue="{Binding CurrentTemplate.Tone}" IsEnabled="{Binding EditingAllowed}"/>
+
+        <Label Grid.Column="1" Grid.Row="4" Content="Instructions"/>
+        <TextBox Grid.Column="2" Grid.Row="4" Margin="0,0,0,5"  Text="{Binding CurrentTemplate.Instructions}" IsEnabled="{Binding EditingAllowed}"
+                 VerticalScrollBarVisibility="Auto" AcceptsReturn="True" TextWrapping="WrapWithOverflow"/>
+
+        <Label Grid.Column="1" Grid.Row="5" Content="Topic"/>
+        <TextBox Grid.Column="2" Grid.Row="5" Margin="0,0,0,5" Text="{Binding CurrentTemplate.Topic}" IsEnabled="{Binding EditingAllowed}"
+                 VerticalScrollBarVisibility="Auto" AcceptsReturn="True" TextWrapping="WrapWithOverflow"/>
+
+        <StackPanel Grid.Column="2" Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Save" Margin="0,0,5,0" Padding="5,1,5,1" Command="{Binding SaveClickCommand}" IsEnabled="{Binding CurrentTemplate.EnableSaveDiscard}"/>
+            <Button Content="Discard" Margin="0,0,5,0" Padding="5,1,5,1" Command="{Binding DiscardClickCommand}" IsEnabled="{Binding CurrentTemplate.EnableSaveDiscard}"/>
+            <Button Content="Close" Padding="5,1,5,1" Command="{Binding CancelClickCommand}"/>
+        </StackPanel>
+        
+    </Grid>
+</Window>

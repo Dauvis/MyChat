@@ -21,7 +21,7 @@ namespace MyChat
             _viewModel = viewModel;
             _systemMessageUtil = systemMessageUtil;
             DataContext = viewModel;
-            WeakReferenceMessenger.Default.Register<CloseWindowMessage>(this, (r, m) => CloseWindow());
+            WeakReferenceMessenger.Default.Register<WindowEventMessage>(this, (r, m) => OnWindowState(m));
 
             InitViewModel();
             InitModelCombo(gptService);
@@ -53,16 +53,29 @@ namespace MyChat
             }
         }
 
-        private void CloseWindow()
+        private void OnWindowState(WindowEventMessage m)
         {
-            Close();
+            if (m.Type == WindowType.Setting)
+            {
+                if (m.State == WindowEventType.DoClose)
+                {
+                    Close();
+                }
+                else if (m.State == WindowEventType.Closing)
+                {
+                    WeakReferenceMessenger.Default.Unregister<WindowEventMessage>(this);
+                }                
+            }
         }
 
-        protected override void OnClosed(EventArgs e)
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            WeakReferenceMessenger.Default.Unregister<CloseWindowMessage>(this);
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Closing, WindowType.Setting));
+        }
 
-            base.OnClosed(e);
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Loaded, WindowType.Setting));
         }
     }
 }

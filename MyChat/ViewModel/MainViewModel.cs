@@ -2,20 +2,27 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
+using MyChat.Data;
 using MyChat.DTO;
 using MyChat.Messages;
 using MyChat.Model;
 using MyChat.Service;
 using MyChat.Util;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace MyChat.ViewModel
 {
     public class MainViewModel : ObservableObject
     {
+        private readonly Guid _newChatTemplateGuid = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        private readonly Guid _openTemplateWindowGuid = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2);
+
         private ChatDocument? _currentDocument;
-        public ObservableCollection<ChatDocument> OpenDocuments { get; set; }
+        public ObservableCollection<ChatDocument> OpenDocuments { get; set; } = [];
+        public ObservableCollection<TemplateMRUEntry> TemplateMRU { get; set; } = [];
 
         private readonly IChatService _chatService;
         private readonly IDocumentService _documentService;
@@ -24,6 +31,7 @@ namespace MyChat.ViewModel
         private readonly IToolService _toolService;
         private readonly IServiceProvider _services;
         private readonly SystemMessageUtil _systemMessageUtil;
+        private readonly IChatTemplateRepository _templateRepository;
         private string _prompt = "";
         private Cursor? _currentCursor = null;
         private ImageToolWindow? _imageToolWindow = null;
@@ -40,13 +48,14 @@ namespace MyChat.ViewModel
         public ICommand ExportAsHTMLCommand { get; }
         public ICommand OpenSettingsDialogCommand { get; }
         public ICommand OpenImageToolCommand { get; }
+        public ICommand OpenChatTemplatesCommand { get; }
 
         public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil, 
             ISettingsService settingsService, IToolService toolService, IServiceProvider services,
-            SystemMessageUtil systemMessageUtil)
+            SystemMessageUtil systemMessageUtil, IChatTemplateRepository templateRepository)
         {
             SendPromptCommand = new AsyncRelayCommand(OnSendPromptAsync);
-            NewDocumentCommand = new RelayCommand(OnNewDocument);
+            NewDocumentCommand = new RelayCommand<TemplateMRUEntry>(OnNewDocument);
             OpenDocumentCommand = new RelayCommand(OnOpenDocument);
             CloseDocumentCommand = new RelayCommand<object>(OnCloseDocument);
             SaveDocumentCommand = new RelayCommand(OnSaveDocument);
@@ -57,6 +66,7 @@ namespace MyChat.ViewModel
             ExportAsHTMLCommand = new AsyncRelayCommand(OnExportAsHTMLAsync);
             OpenSettingsDialogCommand = new RelayCommand(OnOpenSettingsDialog);
             OpenImageToolCommand = new RelayCommand(OnOpenImageTool);
+            OpenChatTemplatesCommand = new RelayCommand(OnOpenChatTemplatesWindow);
 
             _chatService = chatService;
             _documentService = documentService;
@@ -65,8 +75,8 @@ namespace MyChat.ViewModel
             _toolService = toolService;
             _services = services;
             _systemMessageUtil = systemMessageUtil;
-            OpenDocuments = [];
-            WeakReferenceMessenger.Default.Register<MainWindowStateMessage>(this, (r, m) => OnMainWindowState(m));
+            _templateRepository = templateRepository;
+            WeakReferenceMessenger.Default.Register<WindowEventMessage>(this, (r, m) => OnWindowState(m));
         }
 
         private void ToolService_StartNewChatEvent(object? sender, NewChatEventArgs e)
@@ -101,47 +111,71 @@ namespace MyChat.ViewModel
             }
         }
 
-        private void OnMainWindowState(MainWindowStateMessage message)
+        private void OnWindowState(WindowEventMessage message)
         {
-            if (message.StateAction == MainWindowStateAction.Startup)
+            if (message.Type == WindowType.Main)
             {
-                _documentService.SubscribeToOpenDocumentsChanged(DocumentService_OpenDocumentsChanged);
-                _toolService.SubscribeToChatTitle(ToolService_ChatTitleEvent);
-                _toolService.SubscribeToNewChat(ToolService_StartNewChatEvent);
-                _toolService.SubscribeToOpenImageTool(ToolService_OpenImageTool);
-
-                UserSettings userSettings = _settingsService.GetUserSettings();
-                _documentService.OpenDocumentList(userSettings.LastOpenFiles);
-
-                if (OpenDocuments.Count == 0)
+                if (message.State == WindowEventType.Loaded)
                 {
-                    _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultInstructions);
+                    _documentService.SubscribeToOpenDocumentsChanged(DocumentService_OpenDocumentsChanged);
+                    _toolService.SubscribeToChatTitle(ToolService_ChatTitleEvent);
+                    _toolService.SubscribeToNewChat(ToolService_StartNewChatEvent);
+                    _toolService.SubscribeToOpenImageTool(ToolService_OpenImageTool);
+
+                    UserSettings userSettings = _settingsService.GetUserSettings();
+                    _documentService.OpenDocumentList(userSettings.LastOpenFiles);
+
+                    if (OpenDocuments.Count == 0)
+                    {
+                        _currentDocument = _documentService.CreateDocument(userSettings.DefaultTone, userSettings.DefaultInstructions);
+                    }
+                    else
+                    {
+                        _currentDocument = OpenDocuments.First();
+                    }
+
+                    SelectionChanged(_currentDocument, null);
+                    InitializeTemplateMRU();
                 }
-                else
+
+                if (message.State == WindowEventType.Closing)
                 {
-                    _currentDocument = OpenDocuments.First();
+                    WeakReferenceMessenger.Default.Unregister<WindowEventMessage>(this);
+                    UserSettings userSettings = _settingsService.GetUserSettings();
+                    _documentService.UpdateUserSettings(userSettings);
+                    _settingsService.SetUserSettings(userSettings);
+
+                    _documentService.UnsubscribeFromOpenDocumentsChanged(DocumentService_OpenDocumentsChanged);
+                    _toolService.UnsubscribeFromChatTitle(ToolService_ChatTitleEvent);
+                    _toolService.UnsubscribeFromNewChat(ToolService_StartNewChatEvent);
+                    _toolService.UnsubscribeFromOpenImageTool(ToolService_OpenImageTool);
                 }
 
-                SelectionChanged(_currentDocument, null);
+                if (message.State == WindowEventType.Refresh)
+                {
+                    OnPropertyChanged("");
+                }
             }
-
-            if (message.StateAction == MainWindowStateAction.Shutdown)
+            else if (message.Type == WindowType.ImageTool && message.State == WindowEventType.Closing)
             {
-                WeakReferenceMessenger.Default.Unregister<MainWindowStateMessage>(this);
-                UserSettings userSettings = _settingsService.GetUserSettings();
-                _documentService.UpdateUserSettings(userSettings);
-                _settingsService.SetUserSettings(userSettings);
-
-                _documentService.UnsubscribeFromOpenDocumentsChanged(DocumentService_OpenDocumentsChanged);
-                _toolService.UnsubscribeFromChatTitle(ToolService_ChatTitleEvent);
-                _toolService.UnsubscribeFromNewChat(ToolService_StartNewChatEvent);
-                _toolService.UnsubscribeFromOpenImageTool(ToolService_OpenImageTool);
+                _imageToolWindow = null;
             }
+        }
 
-            if (message.StateAction == MainWindowStateAction.Refresh)
+        private void InitializeTemplateMRU()
+        {
+            TemplateMRU.Clear();
+            TemplateMRU.Add(new(_newChatTemplateGuid, "New chat..."));
+
+            var settings = _settingsService.GetUserSettings();
+
+            foreach (var mruEntry in settings.RecentTemplates)
             {
-                OnPropertyChanged("");
+                TemplateMRU.Add(mruEntry);
             }
+
+            TemplateMRU.Add(new(_openTemplateWindowGuid, "See more..."));
+            OnPropertyChanged(nameof(TemplateMRU));
         }
 
         private void ToolService_OpenImageTool(object? sender, OpenImageToolEventArgs e)
@@ -319,12 +353,58 @@ namespace MyChat.ViewModel
             get => _currentDocument?.Tone ?? _systemMessageUtil.DefaultTone;
         }
 
+        public double TokenUsageBarValue
+        {
+            get
+            {
+                double totalTokens = _currentDocument?.TotalTokens ?? 0;
+
+                return 100 * (totalTokens / (128000 - 16384));
+            }
+        }
+
+        public Brush TokenUsageBarColor
+        {
+            get
+            {
+                double barValue = TokenUsageBarValue;
+
+                if (barValue < 25)
+                {
+                    return new SolidColorBrush(Colors.Green);
+                }
+                else if (barValue < 50)
+                {
+                    return new SolidColorBrush(Colors.GreenYellow);
+                }
+                else if (barValue < 70)
+                {
+                    return new SolidColorBrush(Colors.Yellow);
+                }
+                else if (barValue < 90)
+                {
+                    return new SolidColorBrush(Colors.Orange);
+                }
+                else
+                {
+                    return new SolidColorBrush(Colors.Red);
+                }
+            }
+        }
+
         private async Task OnSendPromptAsync()
         {
             CurrentCursorState = Cursors.Wait;
 
             if (_currentDocument is not null)
             {
+                if (TokenUsageBarValue > 100)
+                {
+                    _dialogUtil.ShowErrorMessage("Token limit for this conversation has be exceeded. You will need to start a new conversation");
+                    CurrentCursorState = null;
+                    return;
+                }
+
                 var errorMessage = await _chatService.SendPromptAsync(_currentDocument, _prompt);
 
                 if (errorMessage is not null)
@@ -335,6 +415,8 @@ namespace MyChat.ViewModel
                 {
                     WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(_currentDocument.ChatContent));
                     OnPropertyChanged(nameof(WindowTitle));
+                    OnPropertyChanged(nameof(TokenUsageBarValue));
+                    OnPropertyChanged(nameof(TokenUsageBarColor));
                     Prompt = "";
                 }
             }
@@ -342,7 +424,46 @@ namespace MyChat.ViewModel
             CurrentCursorState = null;
         }
 
-        private void OnNewDocument()
+        private void OnNewDocument(TemplateMRUEntry? entry)
+        {
+            if (entry is null)
+            {
+                return;
+            }
+
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.DoClose, WindowType.NewDocumentPopup));
+
+            if (entry.Identifier == _newChatTemplateGuid)
+            {
+                NewDocumentFromDialog();
+            }
+            else if (entry.Identifier == _openTemplateWindowGuid)
+            {
+                OnOpenChatTemplatesWindow();
+            }
+            else
+            {
+                NewDocumentFromTemplateId(entry.Identifier);
+            }
+        }
+
+        private void NewDocumentFromTemplateId(Guid identifier)
+        {
+            var templates = _templateRepository.Fetch();
+            var template = templates.Where(t => t.Identifier == identifier).FirstOrDefault();
+
+            if (template is not null)
+            {
+                _currentDocument = _documentService.CreateDocument(template.Tone, template.Instructions, template.Topic);
+                var settings = _settingsService.GetUserSettings();
+                settings.UpdateTemplateMRU(template.Identifier, templates);
+                _settingsService.SetUserSettings(settings);
+                InitializeTemplateMRU();
+                OnPropertyChanged("");
+            }
+        }
+
+        private void NewDocumentFromDialog()
         {
             var newChatDto = _dialogUtil.PromptForNewChat();
 
@@ -559,7 +680,6 @@ namespace MyChat.ViewModel
             {
                 _imageToolWindow = _services.GetRequiredService<ImageToolWindow>();
                 _imageToolWindow.Show();
-                WeakReferenceMessenger.Default.Register<ImageToolWindowStateMessage>(this, (r, m) => OnImageToolWindowState(m));
             }
             else
             {
@@ -568,13 +688,10 @@ namespace MyChat.ViewModel
             }
         }
 
-        private void OnImageToolWindowState(ImageToolWindowStateMessage m)
+        private void OnOpenChatTemplatesWindow()
         {
-            if (m.StateAction == ImageToolWindowStateAction.Shutdown)
-            {
-                WeakReferenceMessenger.Default.Unregister<ImageToolWindowStateMessage>(this);
-                _imageToolWindow = null;
-            }
+            var window = _services.GetRequiredService<ChatTemplatesWindow>();
+            window.Show();
         }
     }
 }
