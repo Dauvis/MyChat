@@ -34,7 +34,11 @@ namespace MyChat.ViewModel
         private readonly IChatTemplateRepository _templateRepository;
         private string _prompt = "";
         private Cursor? _currentCursor = null;
+        private Visibility _processOverlayVisibility = Visibility.Collapsed;
+        private Visibility _chatViewerVisibility = Visibility.Visible;
         private ImageToolWindow? _imageToolWindow = null;
+        private ChatTemplatesWindow? _chatTemplatesWindow = null;
+        private QuestionAnswerWindow? _questionAnswerWindow = null;
 
         public ICommand SendPromptCommand { get; }
         public ICommand NewDocumentCommand { get; }
@@ -49,6 +53,7 @@ namespace MyChat.ViewModel
         public ICommand OpenSettingsDialogCommand { get; }
         public ICommand OpenImageToolCommand { get; }
         public ICommand OpenChatTemplatesCommand { get; }
+        public ICommand QnAButtonCommand { get; }
 
         public MainViewModel(IChatService chatService, IDocumentService documentService, IDialogUtil dialogUtil, 
             ISettingsService settingsService, IToolService toolService, IServiceProvider services,
@@ -67,6 +72,7 @@ namespace MyChat.ViewModel
             OpenSettingsDialogCommand = new RelayCommand(OnOpenSettingsDialog);
             OpenImageToolCommand = new RelayCommand(OnOpenImageTool);
             OpenChatTemplatesCommand = new RelayCommand(OnOpenChatTemplatesWindow);
+            QnAButtonCommand = new RelayCommand(OnQnAButtonClicked);
 
             _chatService = chatService;
             _documentService = documentService;
@@ -153,12 +159,21 @@ namespace MyChat.ViewModel
 
                 if (message.State == WindowEventType.Refresh)
                 {
+                    InitializeTemplateMRU();
                     OnPropertyChanged("");
                 }
             }
             else if (message.Type == WindowType.ImageTool && message.State == WindowEventType.Closing)
             {
                 _imageToolWindow = null;
+            }
+            else if (message.Type == WindowType.ChatTemplate && message.State == WindowEventType.Closing)
+            {
+                _chatTemplatesWindow = null;
+            }
+            else if (message.Type == WindowType.QnA && message.State == WindowEventType.Closing)
+            {
+                _questionAnswerWindow = null;
             }
         }
 
@@ -261,6 +276,18 @@ namespace MyChat.ViewModel
         {
             get => _currentCursor;
             set => SetProperty(ref _currentCursor, value);
+        }
+
+        public Visibility ProcessOverlayVisibility
+        {
+            get => _processOverlayVisibility;
+            set => SetProperty(ref _processOverlayVisibility, value);
+        }
+
+        public Visibility ChatViewerVisibility
+        {
+            get => _chatViewerVisibility;
+            set => SetProperty(ref _chatViewerVisibility, value);
         }
 
         public string WindowTitle
@@ -392,16 +419,32 @@ namespace MyChat.ViewModel
             }
         }
 
+        private void SetWindowWaiting(bool isWaiting)
+        {
+            if (isWaiting)
+            {
+                CurrentCursorState = Cursors.Wait;
+                ProcessOverlayVisibility = Visibility.Visible;
+                ChatViewerVisibility = Visibility.Collapsed;
+            }
+            else
+            {
+                CurrentCursorState = null;
+                ProcessOverlayVisibility = Visibility.Collapsed;
+                ChatViewerVisibility = Visibility.Visible;
+            }
+        }
+
         private async Task OnSendPromptAsync()
         {
-            CurrentCursorState = Cursors.Wait;
+            SetWindowWaiting(true);
 
             if (_currentDocument is not null)
             {
                 if (TokenUsageBarValue > 100)
                 {
                     _dialogUtil.ShowErrorMessage("Token limit for this conversation has be exceeded. You will need to start a new conversation");
-                    CurrentCursorState = null;
+                    SetWindowWaiting(false);
                     return;
                 }
 
@@ -413,7 +456,7 @@ namespace MyChat.ViewModel
                 }
                 else
                 {
-                    WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(_currentDocument.ChatContent));
+                    WeakReferenceMessenger.Default.Send(new WebViewUpdatedMessage(ViewerIdentification.ChatViewer, _currentDocument.ChatContent));
                     OnPropertyChanged(nameof(WindowTitle));
                     OnPropertyChanged(nameof(TokenUsageBarValue));
                     OnPropertyChanged(nameof(TokenUsageBarColor));
@@ -421,7 +464,7 @@ namespace MyChat.ViewModel
                 }
             }
 
-            CurrentCursorState = null;
+            SetWindowWaiting(false);
         }
 
         private void OnNewDocument(TemplateMRUEntry? entry)
@@ -454,12 +497,18 @@ namespace MyChat.ViewModel
 
             if (template is not null)
             {
-                _currentDocument = _documentService.CreateDocument(template.Tone, template.Instructions, template.Topic);
-                var settings = _settingsService.GetUserSettings();
-                settings.UpdateTemplateMRU(template.Identifier, templates);
-                _settingsService.SetUserSettings(settings);
-                InitializeTemplateMRU();
-                OnPropertyChanged("");
+                var newChatDto = _dialogUtil.PromptForNewChat(template.Tone, template.Instructions, template.Topic);
+
+                if (newChatDto.IsOk)
+                {
+                    _currentDocument = _documentService.CreateDocument(newChatDto.Tone, newChatDto.Instructions, newChatDto.Topic);
+                    var settings = _settingsService.GetUserSettings();
+                    settings.UpdateTemplateMRU(template.Identifier, templates);
+                    _settingsService.SetUserSettings(settings);
+                    InitializeTemplateMRU();
+                    OnPropertyChanged("");
+
+                }
             }
         }
 
@@ -629,7 +678,7 @@ namespace MyChat.ViewModel
             }
 
             _prompt = document.Metadata.CurrentPrompt;
-            WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(document.ChatContent, true));            
+            WeakReferenceMessenger.Default.Send(new WebViewUpdatedMessage(ViewerIdentification.ChatViewer, document.ChatContent, true));            
             OnPropertyChanged("");
         }
 
@@ -639,7 +688,7 @@ namespace MyChat.ViewModel
             {
                 string lastPrompt = _documentService.Undo(_currentDocument);
                 Prompt = lastPrompt;
-                WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(_currentDocument.ChatContent));
+                WeakReferenceMessenger.Default.Send(new WebViewUpdatedMessage(ViewerIdentification.ChatViewer, _currentDocument.ChatContent));
                 OnPropertyChanged(nameof(WindowTitle));
             }
         }
@@ -650,7 +699,7 @@ namespace MyChat.ViewModel
             {
                 _documentService.Redo(_currentDocument);
                 Prompt = "";
-                WeakReferenceMessenger.Default.Send(new ChatViewUpdatedMessage(_currentDocument.ChatContent));
+                WeakReferenceMessenger.Default.Send(new WebViewUpdatedMessage(ViewerIdentification.ChatViewer, _currentDocument.ChatContent));
                 OnPropertyChanged(nameof(WindowTitle));
             }
         }
@@ -676,22 +725,31 @@ namespace MyChat.ViewModel
 
         private void OpenImageToolWindow()
         {
-            if (_imageToolWindow is null)
-            {
-                _imageToolWindow = _services.GetRequiredService<ImageToolWindow>();
-                _imageToolWindow.Show();
-            }
-            else
-            {
-                _imageToolWindow.Show();
-                _imageToolWindow.Activate();
-            }
+            OpenSingleInstanceWindow(ref _imageToolWindow);
         }
 
         private void OnOpenChatTemplatesWindow()
         {
-            var window = _services.GetRequiredService<ChatTemplatesWindow>();
-            window.Show();
+            OpenSingleInstanceWindow(ref _chatTemplatesWindow);
+        }
+
+        private void OnQnAButtonClicked()
+        {
+            OpenSingleInstanceWindow(ref _questionAnswerWindow);
+        }
+
+        private void OpenSingleInstanceWindow<T>(ref T? window) where T : Window
+        {
+            if (window is null)
+            {
+                window = _services.GetRequiredService<T>();
+                window.Show();
+            }
+            else
+            {
+                window.Show();
+                window.Activate();
+            }
         }
     }
 }

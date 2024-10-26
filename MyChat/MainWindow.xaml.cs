@@ -1,11 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Web.WebView2.Core;
 using MyChat.Messages;
 using MyChat.Service;
 using MyChat.Util;
 using MyChat.ViewModel;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text.Encodings.Web;
 using System.Windows;
@@ -32,6 +34,36 @@ namespace MyChat
 
             _dialogUtil = dialogUtil;
             _settingsService = settingsService;
+
+            ChatViewer.CoreWebView2InitializationCompleted += (sender, args) =>
+            {
+                ChatViewer.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
+            };
+        }
+
+        private void CoreWebView2_NavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
+        {
+            var url = e.Uri;
+
+            // Here you can specify conditions for URLs that should open in the default browser
+            if (ShouldOpenInBrowser(url))
+            {
+                // Cancel WebView2 navigation
+                e.Cancel = true;
+
+                // Open the URL in the default browser
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+        }
+
+        private static bool ShouldOpenInBrowser(string url)
+        {
+            if (url.StartsWith("data:text/html", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
@@ -59,32 +91,40 @@ namespace MyChat
 
             _settingsService.SetUserSettings(settings);
 
-            WeakReferenceMessenger.Default.Unregister<ChatViewUpdatedMessage>(this);
+            WeakReferenceMessenger.Default.Unregister<WebViewUpdatedMessage>(this);
             WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Closing, WindowType.Main));
+
+            if (ChatViewer.CoreWebView2 != null)
+            {
+                ChatViewer.CoreWebView2.NavigationStarting -= CoreWebView2_NavigationStarting;
+            }
 
             Application.Current.Shutdown();
         }
 
-        private async Task OnChatViewUpdatedMessageAsync(ChatViewUpdatedMessage message)
+        private async Task OnChatViewUpdatedMessageAsync(WebViewUpdatedMessage message)
         {
-            await ChatViewer.EnsureCoreWebView2Async();
-            string untickedText = message.ChatText.Replace("`", "'"); // I don't like backticks
-
-            string scrollYPosition = "0";
-
-            if (!message.IsReplacement)
+            if (message.ViewerId == ViewerIdentification.ChatViewer)
             {
-                var jsResult = await ChatViewer.CoreWebView2.ExecuteScriptWithResultAsync("window.scrollY.toString()");
+                await ChatViewer.EnsureCoreWebView2Async();
+                string untickedText = message.ChatText.Replace("`", "'"); // I don't like backticks
 
-                if (jsResult.Succeeded)
+                string scrollYPosition = "0";
+
+                if (!message.IsReplacement)
                 {
-                    jsResult.TryGetResultAsString(out scrollYPosition, out _);
-                }
-            }
+                    var jsResult = await ChatViewer.CoreWebView2.ExecuteScriptWithResultAsync("window.scrollY.toString()");
 
-            ChatViewer.NavigateToString(string.Format(HTMLConstants.DocumentTemplate, untickedText));
-            await Task.Delay(500);
-            await ChatViewer.CoreWebView2.ExecuteScriptAsync($"window.scroll(0, {scrollYPosition});");
+                    if (jsResult.Succeeded)
+                    {
+                        jsResult.TryGetResultAsString(out scrollYPosition, out _);
+                    }
+                }
+
+                ChatViewer.NavigateToString(string.Format(HTMLConstants.DocumentTemplate, untickedText));
+                await Task.Delay(500);
+                await ChatViewer.CoreWebView2.ExecuteScriptAsync($"window.scroll(0, {scrollYPosition});");
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -103,7 +143,7 @@ namespace MyChat
                 columns[4].Width = new(settings.MainWindow.MessageColumnWidth);
             }
 
-            WeakReferenceMessenger.Default.Register<ChatViewUpdatedMessage>(this, async (r, m) => await OnChatViewUpdatedMessageAsync(m));
+            WeakReferenceMessenger.Default.Register<WebViewUpdatedMessage>(this, async (r, m) => await OnChatViewUpdatedMessageAsync(m));
             WeakReferenceMessenger.Default.Register<WindowEventMessage>(this, (r, m) => OnWindowEventMessage(m));
             WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Loaded, WindowType.Main));
         }
@@ -115,6 +155,14 @@ namespace MyChat
                 if (m.State == WindowEventType.DoClose)
                 {
                     NewDocumentPopup.IsOpen = false;
+                }
+            }
+
+            if (m.Type == WindowType.Main)
+            {
+                if (m.State == WindowEventType.Focus)
+                {
+                    Activate();
                 }
             }
         }

@@ -376,6 +376,7 @@ namespace MyChat.ViewModel
             settings.UpdateTemplateMRU(CurrentTemplate);
             _settingsService.SetUserSettings(settings);
             WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.DoClose, WindowType.ChatTemplate));
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Refresh, WindowType.Main));
         }
 
         private void OnSaveClick()

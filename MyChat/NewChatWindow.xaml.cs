@@ -18,7 +18,6 @@ namespace MyChat
             DataContext = viewModel;
             _viewModel = viewModel;
             _systemMessageUtil = systemMessageUtil;
-            _viewModel.LoadUserSettings();
 
             InitToneCombo();
         }

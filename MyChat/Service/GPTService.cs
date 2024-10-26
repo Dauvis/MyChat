@@ -57,14 +57,24 @@ namespace MyChat.Service
             }
         }
 
-        public async Task<(ChatExchange, int)> SendMessageAsync(List<ChatMessage> chatMessages, string prompt)
+        public async Task<(ChatExchange, int)> SendMessageAsync(List<ChatMessage> chatMessages, string prompt, bool useTools = true)
         {
-            chatMessages.Add(new UserChatMessage(prompt + (chatMessages.Count == 1 ? " Set the title of this conversation." : "")));
+            ChatCompletionOptions options;
 
-            ChatCompletionOptions options = new()
+            chatMessages.Add(new UserChatMessage(prompt));
+
+            if (useTools)
             {
-                Tools = { _toolService.GetChatTitleTool, _toolService.SetChatTitleTool, _toolService.StartNewChatTool, _toolService.SetImageGenerationPromptTool }
-            };
+                options = new()
+                {
+                    Tools = { _toolService.GetChatTitleTool, _toolService.SetChatTitleTool, _toolService.StartNewChatTool, 
+                        _toolService.SetImageGenerationPromptTool }
+                };
+            }
+            else
+            {
+                options = new();
+            }
 
             bool requiresAction;
             int totalTokens = 0;

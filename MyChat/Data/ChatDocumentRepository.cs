@@ -7,7 +7,7 @@ namespace MyChat.Data
 {
     public class ChatDocumentRepository : IChatDocumentRepository
     {
-        private int _newDocumentCounter = 1;
+        private static int _newDocumentCounter = 1;
 
         public ChatDocument CreateDocument()
         {

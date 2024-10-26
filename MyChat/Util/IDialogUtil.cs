@@ -13,6 +13,7 @@ namespace MyChat.Util
         bool PromptForConfirmation(string message);
         string PromptForExportHTMLPath(string curDocumentPath);
         NewChatDTO PromptForNewChat();
+        NewChatDTO PromptForNewChat(string tone, string instuctions, string topic);
         string PromptForOpenDocumentPath();
         string PromptForSaveDocumentPath(string filename);
         string PromptForSaveImagePath();

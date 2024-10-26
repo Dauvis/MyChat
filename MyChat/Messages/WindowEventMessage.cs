@@ -12,7 +12,8 @@ namespace MyChat.Messages
         Refresh,        // window should fully refresh
         Closing,        // window is closing
         Selection,      // selection of control changed
-        DoClose         // request window/popup to be closed        
+        DoClose,        // request window/popup to be closed        
+        Focus           // request window to take focus
     }
 
     public enum WindowType
@@ -22,7 +23,8 @@ namespace MyChat.Messages
         ChatTemplate,
         Setting,
         NewChat,
-        NewDocumentPopup
+        NewDocumentPopup,
+        QnA
     }
 
     public class WindowEventMessage

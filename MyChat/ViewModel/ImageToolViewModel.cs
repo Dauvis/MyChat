@@ -30,6 +30,7 @@ namespace MyChat.ViewModel
         private BitmapImage _currentBitmapImage;
         private bool _inRefineMode = false;
         private Cursor? _currentCursor = null;
+        private Visibility _processOverlayVisibility = Visibility.Collapsed;
 
         private readonly IImageService _imageService;
         private readonly IDialogUtil _dialogUtil;
@@ -156,6 +157,12 @@ namespace MyChat.ViewModel
             set => SetProperty(ref _currentCursor, value);
         }
 
+        public Visibility ProcessOverlayVisibility
+        {
+            get => _processOverlayVisibility;
+            set => SetProperty(ref _processOverlayVisibility, value);
+        }
+
         private string GetImagePath(int index)
         {
             return index >= 0 ? _imageInformation.ImageFilePaths[index] : "Images/placeholder.png";
@@ -198,6 +205,20 @@ namespace MyChat.ViewModel
             SetImageSource(GetImagePath(index));
         }
 
+        private void SetWindowWaiting(bool isWaiting)
+        {
+            if (isWaiting)
+            {
+                CurrentCursorState = Cursors.Wait;
+                ProcessOverlayVisibility = Visibility.Visible;
+            }
+            else
+            {
+                CurrentCursorState = null;
+                ProcessOverlayVisibility = Visibility.Collapsed;
+            }
+        }
+
         public async Task OnGenerateButtonClickedAsync()
         {
             if (string.IsNullOrEmpty(Prompt))
@@ -206,12 +227,12 @@ namespace MyChat.ViewModel
                 return;
             }
 
-            CurrentCursorState = Cursors.Wait;
+            SetWindowWaiting(true);
             SetImageSource(-1);
 
             string imagePath = _inRefineMode && _currentIndex >= 0 ? GetImagePath(_currentIndex) : "";
             var newImagePath = await _imageService.GenerateAsync(Prompt, Quality, Size, Style, imagePath);
-            CurrentCursorState = null;
+            SetWindowWaiting(false);
 
             if (string.IsNullOrEmpty(newImagePath))
             {

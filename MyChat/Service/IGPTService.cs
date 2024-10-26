@@ -10,6 +10,6 @@ namespace MyChat.Service
 
         void ChangeChatModel(string newModel);
         Task<BinaryData?> GenerateImageAsync(string prompt, string quality, string size, string style);
-        Task<(ChatExchange, int)> SendMessageAsync(List<ChatMessage> chatMessages, string prompt);
+        Task<(ChatExchange, int)> SendMessageAsync(List<ChatMessage> chatMessages, string prompt, bool useTools = true);
     }
 }

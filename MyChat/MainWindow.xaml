@@ -106,6 +106,14 @@
                 </Button>
             </ToolBar>
             <ToolBar Band="0" BandIndex="2">
+                <Button ToolTip="Open Question and Answer window..." Command="{Binding QnAButtonCommand}" ToolBar.OverflowMode="AsNeeded">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/infocard.png" Margin="3"/>
+                            <TextBlock Text="Q&amp;A" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
                 <Button ToolTip="Export to html..." Command="{Binding ExportAsHTMLCommand}" ToolBar.OverflowMode="AsNeeded">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
@@ -173,7 +181,7 @@
         <GridSplitter Grid.Column="1" Grid.Row="1" Grid.RowSpan="3" Background="Gray" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
         <Border Grid.Column="2" Grid.Row="2" Grid.RowSpan="2" BorderThickness="1,1,1,1" Margin="3,3,3,5" BorderBrush="Black" >
-            <wv2:WebView2 Name="ChatViewer"/>
+            <wv2:WebView2 Name="ChatViewer" Visibility="{Binding ChatViewerVisibility}"/>
         </Border>
 
 
@@ -215,5 +223,20 @@
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>
+
+        <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="5" Grid.RowSpan="5" x:Name="ProcessOverlay" Background="Transparent" 
+              Visibility="{Binding ProcessOverlayVisibility}" Panel.ZIndex="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="3*"/>
+            </Grid.RowDefinitions>
+            <ProgressBar Grid.Column="1" Grid.Row="1" IsIndeterminate="True" Visibility="Visible" />
+        </Grid>
     </Grid>
 </Window>

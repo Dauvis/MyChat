@@ -20,6 +20,7 @@ namespace MyChat.Util
         public string ToolOpening { get; set; } = "";
         public string ToolClosing { get; set; } = "";
         public Dictionary<string, string> ToolInstructions { get; set; } = [];
+        public string QnASystemMessage { get; set; } = "";
 
         public static SystemMessageUtil Create()
         {

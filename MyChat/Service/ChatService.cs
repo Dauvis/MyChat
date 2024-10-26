@@ -1,6 +1,7 @@
 ﻿using MyChat.Data;
 using MyChat.Model;
 using MyChat.Util;
+using OpenAI.Chat;
 using System.IO;
 
 namespace MyChat.Service
@@ -34,6 +35,24 @@ namespace MyChat.Service
             }
 
             return null;
+        }
+
+        public async Task<ChatExchange?> SendMessagesAsync(List<ChatMessage> messages, string prompt)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(prompt))
+                {
+                    return null;
+                }
+
+                (var exchange, int tokens) = await _gptService.SendMessageAsync(messages, prompt, false);
+                return exchange;
+            }
+            catch (Exception e)
+            {
+                return new ChatExchange(prompt, $"# Error\n{e.Message}");
+            }
         }
 
         public async Task<bool> ExportAsHTMLAsync(ChatDocument document, string filename)

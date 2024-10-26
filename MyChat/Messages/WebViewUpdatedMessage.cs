@@ -6,14 +6,22 @@ using System.Threading.Tasks;
 
 namespace MyChat.Messages
 {
-    public class ChatViewUpdatedMessage
+    public enum ViewerIdentification
     {
-        public ChatViewUpdatedMessage(string chatText, bool isReplacement = false)
+        ChatViewer,
+        QnAViewer
+    }
+
+    public class WebViewUpdatedMessage
+    {
+        public WebViewUpdatedMessage(ViewerIdentification viewerId, string chatText, bool isReplacement = false)
         {
+            ViewerId = viewerId;
             ChatText = chatText;
             IsReplacement = isReplacement;
         }
 
+        public ViewerIdentification ViewerId { get; set; }
         public bool IsReplacement { get; set; }
         public string ChatText { get; set; }
     }

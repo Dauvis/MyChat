@@ -2,11 +2,14 @@
 using Microsoft.Win32;
 using MyChat.DTO;
 using MyChat.Model;
+using MyChat.Service;
 using MyChat.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,10 +26,12 @@ namespace MyChat.Util
     public class DialogUtil : IDialogUtil
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly ISettingsService _settingsService;
 
-        public DialogUtil(IServiceProvider serviceProvider)
+        public DialogUtil(IServiceProvider serviceProvider, ISettingsService settingsService)
         {
             _serviceProvider = serviceProvider;
+            _settingsService = settingsService;
         }
 
         public UserDialogResult AllowApplicationClosure(ObservableCollection<ChatDocument> documents)
@@ -138,29 +143,40 @@ namespace MyChat.Util
 
         public NewChatDTO PromptForNewChat()
         {
-            NewChatDTO dto = new();
+            var userSettings = _settingsService.GetUserSettings();
+            return PerformNewChatDialog(userSettings.DefaultTone, userSettings.DefaultInstructions, "");
+        }
+
+        public NewChatDTO PromptForNewChat(string tone, string instuctions, string topic)
+        {
+            return PerformNewChatDialog(tone, instuctions, topic);
+        }
+
+        private NewChatDTO PerformNewChatDialog(string tone, string instructions, string topic)
+        {
             var newChatWindow = _serviceProvider.GetRequiredService<NewChatWindow>();
 
             if (newChatWindow == null)
             {
-                return dto;
+                return new();
             }
+
+            NewChatDTO dto = new()
+            {
+                Tone = tone,
+                Instructions = instructions,
+                Topic = topic
+            };
+
+            var dlgViewModel = (NewChatViewModel)newChatWindow.DataContext;
+            dlgViewModel.DialogValues = dto;
 
             var dlgResult = newChatWindow.ShowDialog();
+            var ret = dlgViewModel.DialogValues;
+            ret.IsOk = dlgResult == true;
 
-            if (dlgResult == false)
-            {
-                return dto;
-            }
-            
-            NewChatViewModel dlgViewModel = (NewChatViewModel)newChatWindow.DataContext;
+            return ret;
 
-            dto.IsOk = true;
-            dto.Instructions = dlgViewModel.Instructions;
-            dto.Tone = dlgViewModel.Tone;
-            dto.Topic = dlgViewModel.Topic;
-
-            return dto;
         }
 
         public void FailedToSaveDocument(string documentPath)

@@ -135,5 +135,21 @@
                 <TextBlock Text="&#xE788;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"/>
             </StatusBarItem>
         </StatusBar>
+
+        <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Grid.RowSpan="5" x:Name="ProcessOverlay" Background="Transparent" 
+              Visibility="{Binding ProcessOverlayVisibility}" Panel.ZIndex="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="3*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="3*"/>
+            </Grid.RowDefinitions>
+            <ProgressBar Grid.Column="1" Grid.Row="1" IsIndeterminate="True" Visibility="Visible" />
+        </Grid>
+
     </Grid>
 </Window>

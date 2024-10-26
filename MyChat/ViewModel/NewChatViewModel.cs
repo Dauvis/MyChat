@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using MyChat.DTO;
 using MyChat.Service;
 
 namespace MyChat.ViewModel
@@ -37,12 +38,24 @@ namespace MyChat.ViewModel
             set => SetProperty(ref _topic, value);
         }
 
-        public void LoadUserSettings()
+        public NewChatDTO DialogValues
         {
-            var userSettings = _settings.GetUserSettings();
+            get
+            {
+                return new()
+                {
+                    Tone = _tone,
+                    Instructions = _instructions,
+                    Topic = _topic
+                };
+            }
 
-            Instructions = userSettings.DefaultInstructions;
-            Tone = userSettings.DefaultTone;
+            set
+            {
+                Tone = value.Tone;
+                Instructions = value.Instructions;
+                Topic = value.Topic;
+            }
         }
     }
 }

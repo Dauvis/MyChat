@@ -33,6 +33,7 @@
     <None Remove="Images\gear.png" />
     <None Remove="Images\globe--arrow.png" />
     <None Remove="Images\image--arrow.png" />
+    <None Remove="Images\infocard.png" />
     <None Remove="Images\information.png" />
     <None Remove="Images\map--pencil.png" />
     <None Remove="Images\megaphone--plus.png" />
@@ -110,6 +111,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\image--arrow.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\infocard.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\information.png">

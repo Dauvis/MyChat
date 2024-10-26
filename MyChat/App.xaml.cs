@@ -47,6 +47,7 @@ namespace MyChat
             services.AddTransient<NewChatWindow>();
             services.AddTransient<ImageToolWindow>();
             services.AddTransient<ChatTemplatesWindow>();
+            services.AddTransient<QuestionAnswerWindow>();
 
             services.AddTransient<IChatDocumentRepository, ChatDocumentRepository>();
             services.AddTransient<IUserSettingsRepository, UserSettingsRepository>();
@@ -67,6 +68,7 @@ namespace MyChat
             services.AddTransient<NewChatViewModel>();
             services.AddTransient<ImageToolViewModel>();
             services.AddTransient<ChatTemplatesViewModel>();
+            services.AddTransient<QuestionAnswerViewModel>();
 
             var systemMessageUtil = SystemMessageUtil.Create();
             services.AddSingleton(systemMessageUtil);
