@@ -1,9 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Web.WebView2.Core;
-using MyChat.Messages;
-using MyChat.Service;
-using MyChat.Util;
+using MyChat.Common;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Messages;
+using MyChat.Common.Util;
 using MyChat.ViewModel;
 using System;
 using System.ComponentModel;
@@ -165,6 +166,12 @@ namespace MyChat
                     Activate();
                 }
             }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new AboutWindow();
+            dialog.ShowDialog();
         }
     }
 }

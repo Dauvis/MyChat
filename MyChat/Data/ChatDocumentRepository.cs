@@ -1,4 +1,5 @@
-﻿using MyChat.Model;
+﻿using MyChat.Common.Interfaces;
+using MyChat.Common.Model;
 using OpenAI.Chat;
 using System.IO;
 using System.Text.Json;

@@ -1,16 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MyChat.Data;
-using MyChat.Model;
 using MyChat.Service;
-using MyChat.Util;
 using MyChat.ViewModel;
-using System.Configuration;
-using System.Data;
-using System.Diagnostics;
 using System.IO.Pipes;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Util;
+using MyChat.Common;
 
 namespace MyChat
 {

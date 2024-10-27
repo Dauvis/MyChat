@@ -1,5 +1,6 @@
-﻿using MyChat.Model;
-using MyChat.Util;
+﻿using MyChat.Common.CommunicationEventArgs;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Model;
 using OpenAI.Chat;
 using System;
 using System.Collections.Generic;

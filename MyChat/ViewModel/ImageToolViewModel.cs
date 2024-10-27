@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using MyChat.DTO;
-using MyChat.Messages;
-using MyChat.Model;
-using MyChat.Service;
-using MyChat.Util;
+using MyChat.Common.CommunicationEventArgs;
+using MyChat.Common.DTO;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Messages;
+using MyChat.Common.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;

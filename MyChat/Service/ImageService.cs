@@ -1,6 +1,5 @@
-﻿using MyChat.Data;
-using MyChat.DTO;
-using MyChat.Util;
+﻿using MyChat.Common.DTO;
+using MyChat.Common.Interfaces;
 using OpenAI.Images;
 using System;
 using System.Collections.Generic;

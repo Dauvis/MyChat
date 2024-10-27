@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using MyChat.Messages;
-using MyChat.Model;
-using MyChat.Service;
-using MyChat.Util;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Messages;
+using MyChat.Common.Model;
+using MyChat.Common.Util;
 using OpenAI.Chat;
 using System;
 using System.Collections.Generic;

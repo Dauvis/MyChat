@@ -1,9 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using MyChat.Messages;
-using MyChat.Model;
-using MyChat.Service;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Messages;
 using System.Windows.Input;
 
 namespace MyChat.ViewModel

@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Web.WebView2.Core;
-using MyChat.Messages;
-using MyChat.Util;
+using MyChat.Common;
+using MyChat.Common.Messages;
 using MyChat.ViewModel;
 using System;
 using System.Collections.Generic;

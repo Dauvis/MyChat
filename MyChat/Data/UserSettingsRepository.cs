@@ -1,5 +1,6 @@
-﻿using MyChat.Model;
-using MyChat.Util;
+﻿using MyChat.Common;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Model;
 using System.IO;
 using System.Text.Json;
 

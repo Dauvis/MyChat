@@ -1,4 +1,4 @@
-﻿using MyChat.Util;
+﻿using MyChat.Common.Util;
 using MyChat.ViewModel;
 using System.Windows;
 

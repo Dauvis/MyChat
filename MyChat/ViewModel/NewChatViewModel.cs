@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using MyChat.DTO;
-using MyChat.Service;
+using MyChat.Common.DTO;
+using MyChat.Common.Interfaces;
 
 namespace MyChat.ViewModel
 {

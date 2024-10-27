@@ -2,12 +2,11 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
-using MyChat.Data;
-using MyChat.DTO;
-using MyChat.Messages;
-using MyChat.Model;
-using MyChat.Service;
-using MyChat.Util;
+using MyChat.Common.CommunicationEventArgs;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Messages;
+using MyChat.Common.Model;
+using MyChat.Common.Util;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
@@ -82,7 +81,7 @@ namespace MyChat.ViewModel
             _services = services;
             _systemMessageUtil = systemMessageUtil;
             _templateRepository = templateRepository;
-            WeakReferenceMessenger.Default.Register<WindowEventMessage>(this, (r, m) => OnWindowState(m));
+            WeakReferenceMessenger.Default.Register<WindowEventMessage>(this, (r, m) => OnWindowStateMessage(m));
         }
 
         private void ToolService_StartNewChatEvent(object? sender, NewChatEventArgs e)
@@ -117,7 +116,7 @@ namespace MyChat.ViewModel
             }
         }
 
-        private void OnWindowState(WindowEventMessage message)
+        private void OnWindowStateMessage(WindowEventMessage message)
         {
             if (message.Type == WindowType.Main)
             {

@@ -1,6 +1,7 @@
-﻿using MyChat.Data;
-using MyChat.Model;
-using MyChat.Util;
+﻿using MyChat.Common.CommunicationEventArgs;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Model;
+using MyChat.Common.Util;
 using System.IO;
 
 namespace MyChat.Service
@@ -158,7 +159,7 @@ namespace MyChat.Service
         {
             userSettings.LastOpenFiles.Clear();
 
-            foreach (var document in _openDocuments.Where(d => !d.Metadata.IsDirty))
+            foreach (var document in _openDocuments.Where(d => !d.Metadata.IsDirty || d.Metadata.DocumentPath != ""))
             {
                 userSettings.LastOpenFiles.Add(document.Metadata.DocumentPath);
             }

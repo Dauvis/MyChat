@@ -1,12 +1,13 @@
 ﻿using OpenAI.Chat;
 using OpenAI;
-using MyChat.Model;
 using System.Windows;
 using System.Text.Json;
 using OpenAI.Images;
 using System.IO;
 using System.Linq.Expressions;
 using MyChat.Data;
+using MyChat.Common.Model;
+using MyChat.Common.Interfaces;
 
 namespace MyChat.Service
 {

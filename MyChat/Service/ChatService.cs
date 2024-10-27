@@ -1,6 +1,7 @@
-﻿using MyChat.Data;
-using MyChat.Model;
-using MyChat.Util;
+﻿using MyChat.Common;
+using MyChat.Common.Interfaces;
+using MyChat.Common.Model;
+using MyChat.Data;
 using OpenAI.Chat;
 using System.IO;
 

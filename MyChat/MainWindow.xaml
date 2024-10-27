@@ -146,6 +146,14 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
+                <Button ToolTip="About MyChat..." ToolBar.OverflowMode="AsNeeded" Click="Button_Click">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/information.png" Margin="3"/>
+                            <TextBlock Text="About" VerticalAlignment="Center" Margin="3,0,0,0"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
             </ToolBar>
         </ToolBarTray>
 

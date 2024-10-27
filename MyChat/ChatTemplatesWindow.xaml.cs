@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
-using MyChat.Messages;
-using MyChat.Util;
+using MyChat.Common.Messages;
+using MyChat.Common.Util;
 using MyChat.ViewModel;
 using System;
 using System.Collections.Generic;
