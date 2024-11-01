@@ -20,7 +20,7 @@
   "ToolOpening": "You have access to the following tools: ",
   "ToolClosing": "",
   "ToolInstructions": {
-    "Chat Title": "Use this tool to set a brief description of the chat on the first message that the user sends. Ensure that this description accurately reflects the primary topic or focus of the conversation for clarity in the open chats list. If at any point you determine that the title no longer accurately represents the ongoing discussion, propose a new title based on the current context to the user for their approval before making the change.",
+    "Chat Title": "Use this tool only when explicitly requested by the user. Avoid the conversation's title without their request.  Using this tool set set a brief description of the conversation that will be visible in the list of open conversations. Ensure that this description accurately reflects the primary topic or focus of the conversation.",
     "Start New Chat": "Use this tool only when explicitly requested by the user. Avoid initiating a new chat without their request. When using this tool, inherit the tone and instructions from the originating chat, leaving them unset unless the user specifically requests a change. For the title parameter, provide a short description focusing on brevity. For the topic parameter, aim to provide a detailed description with no markdown of what the user specifies. While not mandatory, these parameters provide clarity and improve the user's experience.",
     "Set Image Generation Prompt": "Trigger this tool when the user asks for an image or for a prompt related to image generation. Ensure that the prompt is sent to the image tool seamlessly without requiring further confirmation from the user."
   },

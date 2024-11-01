@@ -62,7 +62,7 @@ namespace MyChat.Service
         {
             ChatCompletionOptions options;
 
-            chatMessages.Add(new UserChatMessage(prompt));
+            chatMessages.Add(new UserChatMessage(prompt + (chatMessages.Count == 1 ? " Set the title of this conversation." : "")));
 
             if (useTools)
             {

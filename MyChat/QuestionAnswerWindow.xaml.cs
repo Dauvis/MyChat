@@ -68,6 +68,7 @@ namespace MyChat
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             WeakReferenceMessenger.Default.Register<WebViewUpdatedMessage>(this, async (r, m) => await OnChatViewUpdatedMessageAsync(m));
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Loaded, WindowType.QnA));
         }
 
         private async Task OnChatViewUpdatedMessageAsync(WebViewUpdatedMessage message)
@@ -83,6 +84,7 @@ namespace MyChat
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            WeakReferenceMessenger.Default.Send(new WindowEventMessage(WindowEventType.Closing, WindowType.QnA));
             WeakReferenceMessenger.Default.Unregister<WebViewUpdatedMessage>(this);
 
             if (QnAViewer.CoreWebView2 != null)
