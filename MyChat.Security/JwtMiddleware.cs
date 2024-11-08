@@ -9,34 +9,35 @@ namespace MyChat.Security
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<JwtMiddleware> _logger;
+        private readonly IUserProfileService _userService;
 
-        public JwtMiddleware(RequestDelegate next, ILogger<JwtMiddleware> logger)
+        public JwtMiddleware(RequestDelegate next, ILogger<JwtMiddleware> logger, IUserProfileService userService)
         {
             _next = next;
             _logger = logger;
+            _userService = userService;
         }
 
-        public async Task Invoke(HttpContext context, IIdentityTokenValidator tokenValidator)
+        public async Task Invoke(HttpContext context, IMyChatTokenUtil tokenUtil)
         {
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
             try
             {
-                var userId = tokenValidator.ValidateToken(token);
-                context.Items["UserId"] = userId;
+                var userId = tokenUtil.ValidateToken(token);
+                context.Items["MyChatUserId"] = userId;
 
-                // TODO: Attach the user's base information to the context
-                //if (userId != null)
-                //{
-                //    // Attach the user to the context.
-                //    context.Items["User"] = userService.GetByUserId(userId.Value);
-                //}
+                if (userId != null)
+                {
+                    // Attach the user to the context.
+                    context.Items["MyChatUser"] = await _userService.GetAsync(userId);
+                }
             }
             catch (SecurityTokenException)
             {
                 // TODO: look into reporting more detailed information here
                 _logger.LogError("Backend JWT validation failed");
-                context.Items["UserId"] = "";
+                context.Items["MyChatUserId"] = "";
             }
 
             await _next(context);

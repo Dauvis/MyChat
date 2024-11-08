@@ -11,10 +11,10 @@ namespace MyChat.Backend.Controllers
     [Route("api/[controller]")]
     public class LoginController : Controller
     {
-        private readonly IUserService _userService;
+        private readonly IUserProfileService _userService;
         private readonly ILogger<LoginController> _logger;
 
-        public LoginController(IUserService userService, ILogger<LoginController> logger)
+        public LoginController(IUserProfileService userService, ILogger<LoginController> logger)
         {
             _userService = userService;
             _logger = logger;

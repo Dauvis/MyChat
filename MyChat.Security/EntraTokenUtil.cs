@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Abstractions;
+﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using MyChat.Common.DTO;
+using MyChat.Common.Enums;
 using MyChat.Common.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,24 +10,21 @@ using System.Text.Json;
 
 namespace MyChat.Security
 {
-    public class IdentityTokenValidator : IIdentityTokenValidator
+    public class EntraTokenUtil: IEntraTokenUtil
     {
         private readonly IConfiguration _configuration;
-        private readonly ILogger<IIdentityTokenValidator> _logger;
-        private readonly string _secretKey;
-        private readonly string _validIssuer;
-        private readonly string _validAudience;
+        private readonly IMapper _mapper;
+        private readonly IRepositoryFactory _repositoryFactory;
+        private IUserProfileRepository? _profileRepository;
 
-        public IdentityTokenValidator(IConfiguration configuration, ILogger<IIdentityTokenValidator> logger)
+        public EntraTokenUtil(IConfiguration configuration, IMapper mapper, IRepositoryFactory repositoryFactory)
         {
             _configuration = configuration;
-            _logger = logger;
-            _secretKey = configuration["JWT_SECRET_KEY"] ?? throw new ArgumentNullException("JWT secret key has not been set");
-            _validIssuer = configuration["Jwt:ValidIssuer"] ?? throw new ArgumentNullException("JWT valid issuer has not been set");
-            _validAudience = configuration["Jwt:ValidAudience"] ?? throw new ArgumentNullException("JWT valid audience has not been set");
+            _mapper = mapper;
+            _repositoryFactory = repositoryFactory;
         }
 
-        public async Task<string?> ValidateTokenEntraAsync(string? token)
+        public async Task<UserProfileDocumentDTO?> ProfileDocumentForIdTokenAsync(string? token)
         {
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -49,9 +47,28 @@ namespace MyChat.Security
             try
             {
                 var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
-                // Retrieve user ID from claims if needed
-                var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                return userIdClaim;
+                var authUserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (authUserId is not null)
+                {
+                    var repository = await GetUserProfileRepositoryAsync();
+                    var profile = await repository.GetByAuthUserIdAsync(authUserId);
+
+                    if (profile is null)
+                    {
+                        var userInfoDto = new UserInfoDTO()
+                        {
+                            Name = principal.FindFirst("name")?.Value ?? "",
+                            Email = principal.FindFirst(ClaimTypes.Email)?.Value ?? ""
+                        };
+
+                        profile = await repository.CreateAsync(userInfoDto, AuthenticationProvidersType.Entra.ToString(), authUserId);
+                    }
+
+                    return _mapper.Map<UserProfileDocumentDTO>(profile);
+                }
+
+                return null;
             }
             catch
             {
@@ -84,39 +101,16 @@ namespace MyChat.Security
 
             throw new InvalidOperationException("Failed to retrieve JWKS URI from discovery document.");
         }
-        public ClaimsPrincipal? ValidateToken(string? token)
+
+        protected async Task<IUserProfileRepository> GetUserProfileRepositoryAsync()
         {
-            if (string.IsNullOrEmpty(token))
+            if (_profileRepository is null)
             {
-                return null;
+                _profileRepository = await _repositoryFactory.CreateAsync<IUserProfileRepository>()
+                    ?? throw new InvalidOperationException($"Failed to instantiate repository: {nameof(IUserProfileRepository)}");
             }
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Convert.FromBase64String(_secretKey); 
-
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = true,
-                ValidIssuer = _validIssuer,
-                ValidateAudience = true,
-                ValidAudience = _validAudience,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            };
-
-            try
-            {
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
-                return principal;
-            }
-            catch (Exception ex)
-            {
-                // Handle validation failure
-                _logger.LogError("Token validation failed: {Message}", ex.Message);
-                return null;
-            }
+            return _profileRepository;
         }
     }
 }
