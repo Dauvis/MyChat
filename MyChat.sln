@@ -5,13 +5,15 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyChat", "MyChat\MyChat.csproj", "{C469E8C9-E1FE-4B6D-84AD-6F3BFC3BBB72}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyChat.Security", "MyChat.Security\MyChat.Security.csproj", "{9C39F330-2FC3-4289-9E45-836EA5D8377C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyChat.Security", "MyChat.Security\MyChat.Security.csproj", "{9C39F330-2FC3-4289-9E45-836EA5D8377C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyChat.Common", "MyChat.Common\MyChat.Common.csproj", "{91A6A190-CD5C-4C3B-8162-C08A5D4037D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyChat.Common", "MyChat.Common\MyChat.Common.csproj", "{91A6A190-CD5C-4C3B-8162-C08A5D4037D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyChat.Backend", "MyChat.Backend\MyChat.Backend.csproj", "{3E4618F9-F70D-47BA-A996-D27ACF94972B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyChat.Backend", "MyChat.Backend\MyChat.Backend.csproj", "{3E4618F9-F70D-47BA-A996-D27ACF94972B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyChat.Logic", "MyChat.Logic\MyChat.Logic.csproj", "{0C1411A8-2BA4-47BE-966C-86E0CDDAF272}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyChat.Logic", "MyChat.Logic\MyChat.Logic.csproj", "{0C1411A8-2BA4-47BE-966C-86E0CDDAF272}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyChat.Data", "MyChat.Data\MyChat.Data.csproj", "{32815CF9-112C-4B70-9486-10ED8095AB2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{0C1411A8-2BA4-47BE-966C-86E0CDDAF272}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C1411A8-2BA4-47BE-966C-86E0CDDAF272}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C1411A8-2BA4-47BE-966C-86E0CDDAF272}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32815CF9-112C-4B70-9486-10ED8095AB2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32815CF9-112C-4B70-9486-10ED8095AB2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32815CF9-112C-4B70-9486-10ED8095AB2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32815CF9-112C-4B70-9486-10ED8095AB2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

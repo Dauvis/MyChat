@@ -9,8 +9,8 @@ namespace MyChat.Backend
         public static IServiceCollection AddSecurityServices(this IServiceCollection services)
         {
             // Add any services specific to the security layer here
-            services.AddSingleton<IIdentityTokenValidator, IdentityTokenValidator>();
-            services.AddSingleton<IJwtGenerator, JWTGenerator>();
+            services.AddSingleton<IMyChatTokenUtil, MyChatTokenUtil>();
+            services.AddSingleton<IEntraTokenUtil, EntraTokenUtil>();
 
             return services;
         }

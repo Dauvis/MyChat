@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyChat.Common\MyChat.Common.csproj" />
+    <ProjectReference Include="..\MyChat.Data\MyChat.Data.csproj" />
     <ProjectReference Include="..\MyChat.Logic\MyChat.Logic.csproj" />
     <ProjectReference Include="..\MyChat.Security\MyChat.Security.csproj" />
   </ItemGroup>

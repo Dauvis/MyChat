@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MyChat.Common.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,13 +9,13 @@ namespace MyChat.Common.DTO
 {
     public class AuthenticationRequestDTO
     {
-        public AuthenticationRequestDTO(string authProvider, string identityToken)
+        public AuthenticationRequestDTO(AuthenticationProvidersType authProvider, string identityToken)
         {
             AuthProvider = authProvider;
             IdentityToken = identityToken;
         }
 
-        public string AuthProvider { get; set; }
+        public AuthenticationProvidersType AuthProvider { get; set; }
         public string IdentityToken { get; set; }
     }
 }

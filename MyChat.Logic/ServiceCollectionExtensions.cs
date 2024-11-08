@@ -9,7 +9,7 @@ namespace MyChat.Backend
         public static IServiceCollection AddLogicServices(this IServiceCollection services)
         {
             // Add any services specific to the logic layer here
-            services.AddSingleton<IUserService, UserService>();
+            services.AddSingleton<IUserProfileService, UserProfileService>();
 
             return services;
         }
