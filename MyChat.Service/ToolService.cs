@@ -116,7 +116,7 @@ namespace MyChat.Service
         public ExchangeToolCallCollection ProcessToolCalls(ChatCompletion chatCompletion, List<ChatMessage> chatMessages)
         {
             chatMessages.Add(new AssistantChatMessage(chatCompletion));
-            ExchangeToolCallCollection toolCalls = new(chatCompletion.ToString());
+            ExchangeToolCallCollection toolCalls = new(chatCompletion.ToString() ?? "");
 
             foreach (ChatToolCall toolCall in chatCompletion.ToolCalls)
             {
@@ -125,7 +125,7 @@ namespace MyChat.Service
                     case nameof(GetChatTitle):
                         {
                             string toolResult = GetChatTitle();
-                            toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments, toolCall.FunctionName, toolResult));
+                            toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments.ToString(), toolCall.FunctionName, toolResult));
                             chatMessages.Add(new ToolChatMessage(toolCall.Id, toolResult));
                             break;
                         }
@@ -142,7 +142,7 @@ namespace MyChat.Service
                             }
 
                             SetChatTitle(chatTitle);
-                            toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments, toolCall.FunctionName, chatTitle));
+                            toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments.ToString(), toolCall.FunctionName, chatTitle));
                             chatMessages.Add(new ToolChatMessage(toolCall.Id, chatTitle));
                             break;
                         }
@@ -164,7 +164,7 @@ namespace MyChat.Service
                                 string.IsNullOrEmpty(tone) ? "" : tone,
                                 string.IsNullOrEmpty(instructions) ? "" : instructions);
 
-                            toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments, toolCall.FunctionName, string.IsNullOrEmpty(title) ? "" : title));
+                            toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments.ToString(), toolCall.FunctionName, string.IsNullOrEmpty(title) ? "" : title));
                             chatMessages.Add(new ToolChatMessage(toolCall.Id, string.IsNullOrEmpty(title) ? "" : title));
                             break;
                         }
@@ -181,7 +181,7 @@ namespace MyChat.Service
                             }
 
                             SetImageGenerationPrompt(imagePrompt);
-                            toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments, toolCall.FunctionName, imagePrompt));
+                            toolCalls.ToolCalls.Add(new(toolCall.Id, toolCall.FunctionArguments.ToString(), toolCall.FunctionName, imagePrompt));
                             chatMessages.Add(new ToolChatMessage(toolCall.Id, imagePrompt));
                             break;
                         }

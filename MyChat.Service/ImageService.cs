@@ -16,13 +16,11 @@ namespace MyChat.Service
     {
         private readonly IGPTService _gptService;
         private readonly IImageInformationRepository _imageInfoRepository;
-        private readonly IDialogUtil _dialogUtil;
 
-        public ImageService(IGPTService gptService, IImageInformationRepository imageInfoRepository, IDialogUtil dialogUtil)
+        public ImageService(IGPTService gptService, IImageInformationRepository imageInfoRepository)
         {
             _gptService = gptService;
             _imageInfoRepository = imageInfoRepository;
-            _dialogUtil = dialogUtil;
         }
 
         public ImageInformationDTO GetImageInformation()
@@ -68,7 +66,7 @@ namespace MyChat.Service
             }
             catch (Exception ex)
             {
-                _dialogUtil.ShowErrorMessage($"Failed to open {imagePath} in editor: {ex.Message}");
+                // TODO: Need to figure out how to report this to the user
             }
         }
 

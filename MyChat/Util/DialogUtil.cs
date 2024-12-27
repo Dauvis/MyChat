@@ -1,28 +1,15 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using MyChat.Common.DTO;
+using MyChat.Common.Enums;
 using MyChat.Common.Interfaces;
 using MyChat.Common.Model;
 using MyChat.ViewModel;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Runtime;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
-namespace MyChat.Common.Util
+namespace MyChat.Util
 {
-    public enum UserDialogResult
-    {
-        No,
-        Yes,
-        Cancel
-    }
-
     public class DialogUtil : IDialogUtil
     {
         private readonly IServiceProvider _serviceProvider;

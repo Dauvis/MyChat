@@ -1,9 +1,7 @@
 ﻿using MyChat.Common;
 using MyChat.Common.Interfaces;
 using MyChat.Common.Model;
-using MyChat.Data;
 using OpenAI.Chat;
-using System.IO;
 
 namespace MyChat.Service
 {

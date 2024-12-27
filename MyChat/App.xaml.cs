@@ -9,6 +9,7 @@ using System.Windows;
 using MyChat.Common.Interfaces;
 using MyChat.Common.Util;
 using MyChat.Common;
+using MyChat.Util;
 
 namespace MyChat
 {

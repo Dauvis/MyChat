@@ -2,7 +2,6 @@
 using MyChat.Common.DTO;
 using MyChat.Common.Interfaces;
 using MyChat.Common.Model;
-using System.IO;
 using System.Text.Json;
 
 namespace MyChat.Data

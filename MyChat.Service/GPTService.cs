@@ -92,8 +92,8 @@ namespace MyChat.Service
                 {
                     case ChatFinishReason.Stop:
                         {
-                            string assistantMessage = chatCompletion.ToString();
-                            totalTokens = chatCompletion.Usage.TotalTokens;
+                            string assistantMessage = chatCompletion.Content[0].Text;
+                            totalTokens = chatCompletion.Usage.TotalTokenCount;
                             chatMessages.Add(new AssistantChatMessage(assistantMessage));
 
                             exchange = new(prompt, assistantMessage)

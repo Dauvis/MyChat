@@ -2,19 +2,9 @@
 using MyChat.Common.Interfaces;
 using MyChat.Common.Messages;
 using MyChat.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using System.Drawing;
 
 namespace MyChat
 {
@@ -87,7 +77,7 @@ namespace MyChat
             Grid content = (Grid)Content;
             var columns = content.ColumnDefinitions;
 
-            settings.ImageToolWindow.Rectangle = new Rect(Left, Top, Width, Height);
+            settings.ImageToolWindow.Rectangle = new Rectangle((int)Left, (int)Top, (int)Width, (int)Height);
             settings.ImageToolWindow.PromptColumnWidth = columns[2].Width.Value;
 
             _settingsService.SetUserSettings(settings);

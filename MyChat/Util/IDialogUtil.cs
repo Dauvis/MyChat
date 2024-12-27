@@ -1,9 +1,9 @@
 ﻿using MyChat.Common.DTO;
+using MyChat.Common.Enums;
 using MyChat.Common.Model;
-using MyChat.Common.Util;
 using System.Collections.ObjectModel;
 
-namespace MyChat.Common.Interfaces
+namespace MyChat.Util
 {
     public interface IDialogUtil
     {

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿
+using System.Drawing;
 
 namespace MyChat.Common.Model
 {
@@ -54,14 +55,14 @@ namespace MyChat.Common.Model
 
         public class MainWindowInfo
         {
-            public Rect Rectangle { get; set; }
+            public Rectangle Rectangle { get; set; }
             public double ChatColumnWidth { get; set; }
             public double MessageColumnWidth { get; set; }
         }
 
         public class ImageToolWindowInfo
         {
-            public Rect Rectangle { get; set; }
+            public Rectangle Rectangle { get; set; }
             public double PromptColumnWidth { get; set; }
         }
     }

@@ -1,19 +1,16 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Web.WebView2.Core;
 using MyChat.Common;
+using MyChat.Common.Enums;
 using MyChat.Common.Interfaces;
 using MyChat.Common.Messages;
-using MyChat.Common.Util;
+using MyChat.Util;
 using MyChat.ViewModel;
-using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Net.Http;
-using System.Text.Encodings.Web;
+using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace MyChat
 {
@@ -86,7 +83,7 @@ namespace MyChat
             Grid content = (Grid)Content;
             var columns = content.ColumnDefinitions;
 
-            settings.MainWindow.Rectangle = new Rect(Left, Top, Width, Height);
+            settings.MainWindow.Rectangle = new Rectangle((int)Left, (int)Top, (int)Width, (int)Height);
             settings.MainWindow.ChatColumnWidth = columns[0].Width.Value;
             settings.MainWindow.MessageColumnWidth = columns[4].Width.Value;
 

@@ -1,5 +1,6 @@
 ﻿using Markdig;
 using OpenAI.Chat;
+using System.Text;
 using System.Web;
 
 namespace MyChat.Common.Model
@@ -151,7 +152,9 @@ namespace MyChat.Common.Model
                 {
                     messages.Add(new ToolChatMessage(toolCall.ToolCallId, toolCall.CallResult));
 
-                    var call = ChatToolCall.CreateFunctionToolCall(toolCall.ToolCallId, toolCall.CallFunction, toolCall.CallArgs);
+                    byte[] byteArray = Encoding.UTF8.GetBytes(toolCall.CallArgs);
+                    BinaryData binaryData = new(byteArray);
+                    var call = ChatToolCall.CreateFunctionToolCall(toolCall.ToolCallId, toolCall.CallFunction, binaryData);
                     assistantMessage.ToolCalls.Add(call);
                 }
             }
