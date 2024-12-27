@@ -7,7 +7,7 @@ namespace MyChat.Common.Interfaces
         void DeleteImage(string imagePath);
         Task<string> GenerateAsync(string prompt, string quality, string size, string style, string imagePath = "");
         ImageInformationDTO GetImageInformation();
-        void OpenImageInPreferredEditor(string imagePath);
+        bool OpenImageInPreferredEditor(string imagePath);
         void MoveImage(string imagePath, string destinationPath);
     }
 }

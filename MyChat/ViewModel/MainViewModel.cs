@@ -387,7 +387,7 @@ namespace MyChat.ViewModel
             {
                 double totalTokens = _currentDocument?.TotalTokens ?? 0;
 
-                return 100 * (totalTokens / (128000 - 16384));
+                return 100 * (totalTokens / (25000)); // limiting chat size to 25k tokens
             }
         }
 

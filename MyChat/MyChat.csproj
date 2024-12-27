@@ -161,8 +161,4 @@
     <ProjectReference Include="..\MyChat.Service\MyChat.Service.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Service\" />
-  </ItemGroup>
-
 </Project>

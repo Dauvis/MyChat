@@ -54,7 +54,7 @@ namespace MyChat.Service
             }
         }
 
-        public void OpenImageInPreferredEditor(string imagePath)
+        public bool OpenImageInPreferredEditor(string imagePath)
         {
             try
             {
@@ -63,10 +63,12 @@ namespace MyChat.Service
                     FileName = imagePath,
                     UseShellExecute = true
                 });
+
+                return true;
             }
             catch (Exception ex)
             {
-                // TODO: Need to figure out how to report this to the user
+                return false;
             }
         }
 

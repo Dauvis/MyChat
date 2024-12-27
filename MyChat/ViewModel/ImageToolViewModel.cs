@@ -367,7 +367,12 @@ namespace MyChat.ViewModel
 
         public void OnEditImageButtonClicked()
         {
-            _imageService.OpenImageInPreferredEditor(GetImagePath(_currentIndex));
+            var imagePath = GetImagePath(_currentIndex);
+
+            if (!_imageService.OpenImageInPreferredEditor(imagePath))
+            {
+                _dialogUtil.ShowErrorMessage($"Failed to open {imagePath} in editor");
+            }
         }
 
         public void OnDeleteImageButtonClicked()
